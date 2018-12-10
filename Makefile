@@ -12,6 +12,9 @@ else
     d3js:=d3.js
 endif
 
+build:
+	nim js -p:stub mm.nim
+
 download:
 	wget https://cdnjs.cloudflare.com/ajax/libs/svg.js/2.7.1/$(svgjs) \
 	    -O svg.js
