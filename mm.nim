@@ -1,4 +1,6 @@
 # import macros
+import times
+
 import jsffi
 import jsconsole
 import dom
@@ -52,13 +54,44 @@ proc mi_create(dat: JsObject): float =  # {{{1
         ((MmItem)dat).idx = n
         return 1.0
 
-iterator xaxis_month(min: float, max: float, sc: D3Scale): tuple_xaxis =
+proc xaxis_month_1st(x1: float, x2: float): cstring =  # {{{1
+    if true:
+        var d1 = times.getLocalTime(times.fromSeconds((int64)x1))
+        var d2 = times.getLocalTime(times.fromSeconds((int64)x2))
+        # console.debug("new:" & d2.format("yyyy-MM-dd"))
+        if d1.month == d2.month:
+            return (cstring)""
+        # return (cstring)($(d2.year) & "/" & $(d2.month))
+        return (cstring)d2.format("yyyy/MM")
+    # faster than pure/times.
+    # else:
+    #     var d1 = times.fromSeconds((int64)x1)
+    #     var d2 = times.fromSeconds((int64)x2)
+    #     var m = d2.getMonth()
+    #     if m == d1.getMonth():
+    #         return (cstring)""
+    #     return (cstring)($(d2.getYear()) & "/" & $(m + 1))
+
+iterator xaxis_month(min: float, max: float,  # {{{1
+                     sc: D3Scale): tuple_xaxis =
+        var px = 0.0
         var x = min
         var sx = (max - min) * 0.01
+        var nn = 5
         while x < max:
             var nx = sc.to(x)
+            var name = xaxis_month_1st(px, x)
+            var siz = 2
+            px = x
+            if name != "":
+                siz = 1
+                nn += 1
+            if nn < 5:
+                name = ""
+            else:
+                nn = 0
             x += sx
-            var tup: tuple_xaxis = (siz: 1, nam: (cstring)"", pos: (int)nx)
+            var tup: tuple_xaxis = (siz: siz, nam: name, pos: (int)nx)
             yield tup
 
 proc rect_black(rect: SvgRect, msg: cstring): void =  # {{{1
@@ -78,7 +111,9 @@ proc on_csv_xaxis(xmin: float, xmax: float, sx: D3Scale): void =  # {{{1
         rect_black(bbox, "xaxis: bbox")
 
         var px = 0
-        var g = svg.group()
+        var ga = svg.group()
+        var g = ga.group()
+        var gt = ga.group()
         for tup in xaxis_month(xmin, xmax, sx):
             if tup.pos - px < 2:
                 continue
@@ -86,7 +121,10 @@ proc on_csv_xaxis(xmin: float, xmax: float, sx: D3Scale): void =  # {{{1
             if tup.siz == 1:
                 discard g.line(px, 0, px, 50)
             if tup.siz == 2:
-                discard g.line(px, 0, px, 30)
+                discard g.line(px, 20, px, 50)
+            if len(tup.nam) > 0:
+                console.debug("new:" & $(px))
+                discard gt.text(tup.nam).size(10).x(px).y(0)
         discard g.stroke("#000", 2, 1.0)
 
 proc on_csv_yaxis(min: float, max: float, sc: D3Scale): void =  # {{{1

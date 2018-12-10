@@ -7,6 +7,7 @@ type
   SvgParent* = ref object of SvgElement
   SvgRect* {.importc.} = ref object of SvgElement
   SvgLine* {.importc.} = ref object of SvgElement
+  SvgText* {.importc.} = ref object of SvgElement
 
 {.push importcpp.}
 
@@ -16,6 +17,7 @@ proc doc*(svg: SvgElement): SvgParent
 proc group*(svg: SvgParent): SvgParent
 proc rect*(svg: SvgParent, w: int, h: int): SvgRect
 proc line*(svg: SvgParent, x: int, y: int, w: int, h: int): SvgLine
+proc text*(svg: SvgParent, t: cstring): SvgText
 
 proc fill*(svg: SvgElement, src: cstring): SvgElement
 proc x*(svg: SvgElement, x: int): SvgElement
@@ -24,6 +26,8 @@ proc x*(svg: SvgElement): int
 proc y*(svg: SvgElement): int
 proc width*(svg: SvgRect): int
 proc height*(svg: SvgRect): int
+
+proc size*(svg: SvgText, siz: int): SvgText
 
 # svg.draggable.js
 proc draggable*(tags: SvgSet): SvgSet
