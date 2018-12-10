@@ -40,7 +40,7 @@ type
   tuple_xaxis = tuple[siz: int, nam: cstring, pos: int]
 
 var cfg = Config(X1: 200.0, Y1: 50.0, X2: 1000.0, Y2: 500.0,
-                 mode_xrange: 0)
+                 mode_xrange: 4)
 var mi_index = 0
 var mi_items: seq[MmItem] = @[]
 
@@ -129,28 +129,51 @@ proc month_search(x: int, dir: float): tuple[x: float, name: cstring] =  # {{{1
         return (x: d.toTime().toSeconds(), name: n)
 
 
+proc xaxis_month_subtick(w: float): tuple[x: float, n: int] =  # {{{1
+        var ti = times.initInterval(0, int(w), 0, 0, 0, 0, 0)
+        console.debug("tick: " & $(ti.days))
+        if ti.days > 13:
+            return (x: 14.0 * 24 * 60 * 60, n: 2)
+        if ti.days > 2:
+            ti = times.initInterval(0, 0, 0, 0, 7, 0, 0)
+            return (x: 7.0 * 24 * 60 * 60, n: 4)
+        if ti.days > 0 and ti.hours > 11:
+            return (x: 2.0 * 24 * 60 * 60, n: 4)
+        return (x: 24.0 * 60 * 60, n: 28)
+
+
 iterator xaxis_month(min: float, max: float): tuple_xaxis =  # {{{1
-        var px = 0.0
         var sc = d3.scaleLinear(
                   ).domain([min, max]).range([cfg.X1, cfg.X2])
         cfg.sx = sc
         var x = min
-        var sx = (max - min) * 0.01
-        var nn = 5
+        var d1pct = (max - min) * 0.01
+        var px = 0.0
+        var n = 0
+        var cur = month_search(int(x), -0.1)
+        var (sx, nn) = xaxis_month_subtick(d1pct)
         while x < max:
             x = x + sx
-            nn += 1
-            var cur = month_search(int(x), -1)
+            var nxt = month_search(int(x), -0.1)
+            n += 1
+            if n < nn:  # sub-tick
+                var nx = sc.to(x)
+                var tup: tuple_xaxis = (siz: 2, nam: (cstring)"", pos: int(nx))
+                yield tup
+            if nxt.name == cur.name:
+                var nx = sc.to(x)
+                var tup: tuple_xaxis = (siz: 2, nam: (cstring)"", pos: int(nx))
+                yield tup
+
+            n = 0
+            cur = nxt
             var nx = sc.to(cur.x)
-            if int(nx) == int(px):
-                continue
-            var (siz, name) = (1, cur.name)
-            px = nx
-            if name != "" and nn < 5:
-                (siz, name) = (2, "")
+            var name = cur.name
+            if cur.x - px < 5 * d1pct:
+                name = ""
             else:
-                nn = 0
-            var tup: tuple_xaxis = (siz: siz, nam: name, pos: (int)nx)
+                px = cur.x
+            var tup: tuple_xaxis = (siz: 1, nam: name, pos: int(nx))
             yield tup
 
 iterator xaxis_percent_month(min: float, max: float): tuple_xaxis =  # {{{1
@@ -210,19 +233,24 @@ proc on_csv_xaxis(min: float, max: float): void =  # {{{1
         var px = 0
         var ga = svg.group()
         var g = ga.group()
+        var gs = ga.group()
         var gt = ga.group()
         for tup in xaxis_iter(min, max):
-            if tup.pos - px < 2:
-                continue
+            # console.debug("x-iter: " & $(tup.pos))
             px = tup.pos
             if tup.siz == 1:
-                discard g.line(px, 0, px, int(cfg.Y1))
+                var y1 = 0
+                if len(tup.nam) < 1:
+                    y1 = 14
+                discard g.line(px, y1, px, int(cfg.Y1))
+                discard g.line(px, int(cfg.Y1), px, int(cfg.Y2))
             if tup.siz == 2:
                 discard g.line(px, 20, px, int(cfg.Y1))
+                discard gs.line(px, int(cfg.Y1) + 1, px, int(cfg.Y2))
             if len(tup.nam) > 0:
-                console.debug("new:" & $(px))
-                discard gt.text(tup.nam).size(10).x(px).y(0)
+                discard gt.text(tup.nam).size(10).x(px + 2).y(0)
         discard g.stroke("#000", 2, 1.0)
+        discard gs.stroke("#999", 1, 1.0)
 
 proc on_csv_yaxis(min: float, max: float, sc: D3Scale): void =  # {{{1
         var svg = SVG.select("svg").get(0).doc()
