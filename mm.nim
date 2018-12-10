@@ -8,10 +8,6 @@ import jquery_stub
 import d3stub
 import svg_js_stub
 
-# from jsutils import jq, Event, Location
-
-# import SVG  # stub
-
 
 type
   MmItem = ref object of JsObject  # {{{1
@@ -55,6 +51,30 @@ proc mi_create(dat: JsObject): float =  # {{{1
         ((MmItem)dat).idx = n
         return 1.0
 
+proc rect_black(rect: SvgRect, msg: cstring): void =  # {{{1
+        discard rect.fill("none").stroke("#000", 2, 1.0)
+        if msg == "":
+            return
+        console.debug(msg & ": " & $(rect.x()) & "," & $(rect.y()) &
+                      "-" & $(rect.width()) & "," & $(rect.height()))
+
+
+proc on_csv_xaxis(xmin: float, xmax: float, sx: D3Scale): void =  # {{{1
+        var svg = SVG.select("svg").get(0).doc()
+        var x1 = sx.to(xmin)
+        var x2 = sx.to(xmax)
+        var bbox = svg.rect(int(x2 - x1), 50)
+        discard bbox.x(int(x1)).y(0)
+        rect_black(bbox, "xaxis: bbox")
+
+proc on_csv_yaxis(min: float, max: float, sc: D3Scale): void =  # {{{1
+        var svg = SVG.select("svg").get(0).doc()
+        var y1 = sc.to(min)
+        var y2 = sc.to(max)
+        var bbox = svg.rect(200, int(y2 - y1))
+        discard bbox.x(0).y(50)
+        rect_black(bbox, "yaxis: bbox")
+
 proc on_save(ev: Event): void =  # {{{1
         var dat = jq("#root").html()  # SVG
         dat = "<svg>" & dat & "</svg>"
@@ -79,17 +99,27 @@ proc on_save(ev: Event): void =  # {{{1
 
 proc on_csv(dat: seq[JsObject]): void =  # {{{1
         console.debug("inst:" & $(len(dat)))
+        mi_index = 0
+
+        # x domain
         var minx = d3.min(dat, mi_begin)
         var maxx = d3.max(dat, mi_end)
-        # var dom: array[0..1, float] = [minx, maxx]
-        # var rng: array[0..1, float] = [200.0, 1000.0]
         var dom = [minx, maxx]
         var rng = [200.0, 1000.0]
         var sx = d3.scaleLinear().domain(dom).range(rng)
+
+        # create x-axis ruler
+        on_csv_xaxis(minx, maxx, sx)
+
+        # y domain
         dom = [0.0, (float)len(dat)]
-        rng = [0.0, 300.0]
+        rng = [50.0, 500.0]
         var sy = d3.scaleLinear().domain(dom).range(rng)
 
+        # create y-axis ruler
+        on_csv_yaxis(dom[0], dom[1], sy)
+
+        # create rectangles
         var svg = d3.select("svg")
         var rect = svg.selectAll("rect"
           ).data(dat
@@ -102,19 +132,18 @@ proc on_csv(dat: seq[JsObject]): void =  # {{{1
           ).attr("fill", proc (x: JsObject): cstring = ((MmItem)x).color()
           )
 
+        # make bars draggable
         var rects = SVG.select("rect").draggable()
-        # var node = document.createAttribute("abc")
-        # It is: var node_70186 = document.createAttribute("abc");
 
+        # enable save button
         var jqc = jq("#save").off("click").on("click", on_save)
 
 proc on_init(ev: Event): void =  # {{{1
         var d3c = d3.csv("./gannt-d3.csv").then(on_csv)
 
-method on_load(self: MM, data: JSObject): void {.base.} =  # {{{1
-        var svg = d3.select("svg")
-        var d3c = svg.append("g"
-                    ).attr("class", "x axis")
+        # var svg = d3.select("svg")
+        # d3c = svg.group
+        #         ).attr("class", "x axis")
 
 # main {{{1
 var pm = jQuery.jqwhen(jQuery.ready).then(on_init)

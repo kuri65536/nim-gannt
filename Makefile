@@ -15,6 +15,10 @@ endif
 build:
 	nim js -p:stub mm.nim
 
+fetch:
+	cp orig/nim/*.nim stub
+	cp orig/nim/mm.nim .
+
 download:
 	wget https://cdnjs.cloudflare.com/ajax/libs/svg.js/2.7.1/$(svgjs) \
 	    -O svg.js
