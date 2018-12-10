@@ -67,6 +67,12 @@ proc on_csv_xaxis(xmin: float, xmax: float, sx: D3Scale): void =  # {{{1
         discard bbox.x(int(x1)).y(0)
         rect_black(bbox, "xaxis: bbox")
 
+        var g = svg.group()
+        discard g.line((int)x1 + 10, 0, (int)x1 + 10, 50)
+        discard g.line((int)x1 + 20, 0, (int)x1 + 20, 50)
+        discard g.line((int)x1 + 30, 0, (int)x1 + 30, 50)
+        discard g.stroke("#000", 2, 1.0)
+
 proc on_csv_yaxis(min: float, max: float, sc: D3Scale): void =  # {{{1
         var svg = SVG.select("svg").get(0).doc()
         var y1 = sc.to(min)
