@@ -17,6 +17,7 @@ build:
 
 fetch:
 	cp orig/nim/*.nim stub
+	cp orig/nim/gannt.html .
 	cp orig/nim/mm.nim .
 
 download:

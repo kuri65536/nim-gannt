@@ -10,9 +10,40 @@
   <script src="nimcache/mm.js"> </script>
 </head>
 <body>
-  <svg id="root" width="1000" height="600">
+  <svg id="root" width="1000" height="500">
   </svg>
-  <a id="save" href="#">save</a>
+  <div>
+    <select id="xrange">
+      <option value="100">auto,week</option>
+      <option value="200">auto,month</option>
+      <option value="300">auto,quater</option>
+
+      <option value="101">a month,week</option>
+      <option value="102">couple month,week</option>
+
+      <option value="104">quater,week</option>
+      <option value="204">quater,month</option>
+
+      <option value="106">half year,week</option>
+      <option value="206">half year,month</option>
+      <option value="306">half year,quater</option>
+
+      <option value="112">one year,week</option>
+      <option value="212">one year,month</option>
+      <option value="312">one year,quater</option>
+
+      <option value="324">two year,quater</option>
+      <option value="336">three year,quater</option>
+      <option value="348">four year,quater</option>
+    </select>
+    <select id="title">
+      <option value="0">title field</option>
+      <option value="1">on the bars</option>
+      <option value="2">at the right of bars</option>
+    </select>
+    <button id="refresh">refresh</button>
+    <button id="save">save</button>
+  </div>
 </body>
 </html>
 <!-- vi: ft=html:sw=2

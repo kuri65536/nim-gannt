@@ -36,12 +36,13 @@ type
     sx: D3Scale
     sy: D3Scale
     mode_xrange: int
+    mode_title: int
     mode_q1jan: bool
 
   tuple_xaxis = tuple[siz: int, nam: cstring, pos: int]
 
 var cfg = Config(X1: 200.0, Y1: 50.0, X2: 1000.0, Y2: 500.0,
-                 mode_xrange: 0, mode_q1jan: false)
+                 mode_xrange: 0, mode_title: 1, mode_q1jan: false)
 var mi_index = 0
 var mi_items: seq[MmItem] = @[]
 
@@ -480,7 +481,13 @@ proc on_csv(dat: seq[JsObject]): void =  # {{{1
             # make bars draggable
             var r = SVG.select("rect#" & mi_xmlid(i))
             r.draggable()
-            discard t.x(0).y(r.get(0).y)
+            case cfg.mode_title
+            of 1:
+                t.x(r.get(0).x).y(r.get(0).y)
+            of 2:
+                t.x(r.get(0).x + SvgRect(r.get(0)).width).y(r.get(0).y)
+            else:
+                t.x(0).y(r.get(0).y)
 
         # all rects to draggable
         # var rects = SVG.select("rect").draggable()
@@ -489,8 +496,9 @@ proc on_csv(dat: seq[JsObject]): void =  # {{{1
 proc on_refresh(ev: Event): void =  # {{{1
         var loc = window.location
         var url = loc.protocol & cstring("//") & loc.host & loc.pathname
-        var xrange = jq("#mode").val()
-        window.location.href = url & "?xrange=" & xrange
+        var xrange = jq("#xrange").val()
+        var title = jq("#title").val()
+        window.location.href = url & "?xrange=" & xrange & "&title=" & title
 
 
 proc on_init(ev: Event): void =  # {{{1
@@ -498,7 +506,12 @@ proc on_init(ev: Event): void =  # {{{1
         var xrange = url.searchParams.get("xrange")
         if xrange != nil:
             cfg.mode_xrange = int(atof(xrange))
+        var title = url.searchParams.get("title")
+        if title != nil:
+            cfg.mode_title = int(atof(title))
 
+        jq("#xrange").off("change").on("change", on_refresh)
+        jq("#title").off("change").on("change", on_refresh)
         jq("#save").off("click").on("click", on_save)
         jq("#refresh").off("click").on("click", on_refresh)
 
