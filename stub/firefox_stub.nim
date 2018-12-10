@@ -3,7 +3,7 @@ import dom
 
 type
   Blob* = ref BlobObj
-  BlobObj = ref object of RootObj
+  BlobObj = object of RootObj
 
   UrlStub* = ref UrlObj
   UrlObj = ref object of RootObj
@@ -11,14 +11,14 @@ type
   JsPromise* = ref object of RootObj
 
 
-proc newBlob*(ary: array[0..0, string],
-              opt: JsAssoc): Blob {. importcpp: "{@}" .}
+proc newBlob*(ary: array[0..0, cstring],
+              opt: JsAssoc): Blob {. importcpp: "new Blob(@)" .}
+proc URL*(w: Window): UrlStub {. importcpp: "@.URL" .}
 
 {.push importcpp.}
-proc URL*(w: Window): UrlStub
 
-proc createObjectURL*(url: UrlStub, blob: Blob): string
-proc revokeObjectURL*(url: UrlStub, src: string)
+proc createObjectURL*(url: UrlStub, blob: Blob): cstring
+proc revokeObjectURL*(url: UrlStub, src: cstring)
 
 
 proc then*(self: JsPromise, cb: proc (ev: Event)): JsPromise

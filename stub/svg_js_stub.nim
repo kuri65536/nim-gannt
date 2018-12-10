@@ -1,12 +1,12 @@
 type
   SvgJs* = ref SvgJsObj
-  SvgJsObj {.importc.} = ref object of RootObj
+  SvgJsObj {.importc.} = object of RootObj
     dmy: int
   SvgSelector* = ref object of RootObj
 
 {.push importcpp.}
 
-proc select*(svg: SvgJs, tag: string): SvgSelector
+proc select*(svg: SvgJs, tag: cstring): SvgSelector
 
 # svg.draggable.js
 proc draggable*(tags: SvgSelector): SvgSelector

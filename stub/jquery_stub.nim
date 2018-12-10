@@ -8,24 +8,26 @@ type
     dmy: int
 
   JQuery* = ref jQueryObj
-  jQueryObj {.importc.} = ref object of RootObj
+  jQueryObj {.importc.} = object of RootObj
     ready*: cstring
 
 
 
 {.push importcpp.}
 
-proc off*(jq: jQuerySelector, ev_name: string): jQuerySelector
-proc on*(jq: jQuerySelector, ev_name: string,
+proc off*(jq: jQuerySelector, ev_name: cstring): jQuerySelector
+proc on*(jq: jQuerySelector, ev_name: cstring,
          cb: proc (ev: Event)): jQuerySelector
 
-proc html*(jq: jQuerySelector): string
-proc attr*(jq: jQuerySelector, name: string, src: string): jQuerySelector
+proc html*(jq: jQuerySelector): cstring
+proc attr*(jq: jQuerySelector, name: cstring, src: cstring): jQuerySelector
 proc append*(jq: jQuerySelector, src: jQuerySelector): jQuerySelector
-proc `[]`*(jq: jQuerySelector, i: int): Element
 
-proc jq*(selector: string): jQuerySelector
 {.pop.}
+
+proc `[]`*(jq: jQuerySelector, i: int): Element {.importcpp: "#[#]" .}
+
+proc jq*(selector: cstring): jQuerySelector {.importc: "jQuery", nodecl.}
 
 proc jqwhen*(jq: JQuery, src: cstring): JsPromise
     {.importcpp: "when" .}
