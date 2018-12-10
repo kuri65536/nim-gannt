@@ -21,11 +21,12 @@ type
 
 {.push importcpp.}
 
-proc off*(jq: jQuerySelector, ev_name: cstring): jQuerySelector
+proc off*(jq: jQuerySelector, ev_name: cstring): jQuerySelector {.discardable.}
 proc on*(jq: jQuerySelector, ev_name: cstring,
-         cb: proc (ev: Event)): jQuerySelector
+         cb: proc (ev: Event)): jQuerySelector {.discardable.}
 
 proc html*(jq: jQuerySelector): cstring
+proc val*(jq: jQuerySelector): cstring
 proc attr*(jq: jQuerySelector, name: cstring, src: cstring): jQuerySelector
 proc append*(jq: jQuerySelector, src: jQuerySelector): jQuerySelector
 

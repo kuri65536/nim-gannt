@@ -36,11 +36,12 @@ type
     sx: D3Scale
     sy: D3Scale
     mode_xrange: int
+    mode_q1jan: bool
 
   tuple_xaxis = tuple[siz: int, nam: cstring, pos: int]
 
 var cfg = Config(X1: 200.0, Y1: 50.0, X2: 1000.0, Y2: 500.0,
-                 mode_xrange: 4)
+                 mode_xrange: 0, mode_q1jan: false)
 var mi_index = 0
 var mi_items: seq[MmItem] = @[]
 
@@ -112,6 +113,76 @@ proc xaxis_month_1st(x1: float, x2: float): cstring =  # {{{1
     #         return (cstring)""
     #     return (cstring)($(d2.getYear()) & "/" & $(m + 1))
 
+proc week_search(x: int, dir: float): tuple[x: float, name: cstring] =  # {{{1
+        var d = times.getLocalTime(times.fromSeconds((int64)x))
+        d.second = 0
+        d.minute = 0
+        d.hour = 0
+        if dir > 0:
+            var n = 6 - d.weekday.ord + 7 * int(dir)
+            d = d + times.initInterval(0, 0, 0, 0, n, 0, 0)
+        else:
+            console.debug("w-srch: %d-%s-%s", d.weekday.ord, $(d.weekday), d.format("yyyy-MM-dd"))
+            d = d - times.initInterval(0, 0, 0, 0, d.weekday.ord, 0, 0)
+        var w = (d.yearday div 7) + 1
+        var n: cstring
+        if w < 10:
+            n = "w0" & $(w)
+        else:
+            n = "w" & $(w)
+        n = cstring(d.format("yyyy") & n)
+        return (x: d.toTime().toSeconds(), name: n)
+
+
+proc xaxis_week_subtick(w: float): tuple[x: float, n: int] =  # {{{1
+        var ti = times.initInterval(0, int(w), 0, 0, 0, 0, 0)
+        console.debug("w-tick: %d-%d-%d", ti.months, ti.days, ti.hours)
+        if ti.months > 0:
+            return (x: 30.0 * 24 * 60 * 60, n: 10)
+        if ti.days > 6:
+            return (x: 7.0 * 24 * 60 * 60, n: 20)
+        if ti.days > 2:
+            return (x: 3.0 * 24 * 60 * 60, n: 6)
+        if ti.days > 1:
+            return (x: 2.0 * 24 * 60 * 60, n: 4)
+        if ti.hours > 11:
+            return (x: 1.0 * 24 * 60 * 60, n: 14)
+        return (x: 1.0 * 24 * 60 * 60, n: 7)
+
+
+iterator xaxis_week(min: float, max: float): tuple_xaxis =  # {{{1
+        var sc = d3.scaleLinear(
+                  ).domain([min, max]).range([cfg.X1, cfg.X2])
+        cfg.sx = sc
+        var x = min
+        var d1pct = (max - min) * 0.01
+        var cur = week_search(int(x), -0.1)
+        var (sx, nn) = xaxis_week_subtick(d1pct)
+        var px = -5 * sx
+        var n = nn + 1
+        cur.name = ""
+        console.debug("w-axis-step: %.2f-%d", sx, nn)
+        while x < max:
+            var nxt = week_search(int(x), -0.1)
+            var nx = sc.to(x)
+            x = x + sx
+            n += 1
+            console.debug("w-axis: %d-%d", n, sc.to(x))
+            if n < nn or nxt.name == cur.name:  # sub-tick
+                var tup: tuple_xaxis = (siz: 2, nam: (cstring)"", pos: int(nx))
+                yield tup
+                continue
+
+            n = 0
+            cur = nxt
+            var name = cur.name
+            if cur.x - px < 5 * d1pct:
+                name = ""
+            else:
+                px = cur.x
+            var tup: tuple_xaxis = (siz: 1, nam: name, pos: int(nx))
+            yield tup
+
 proc month_search(x: int, dir: float): tuple[x: float, name: cstring] =  # {{{1
         var d = times.getLocalTime(times.fromSeconds((int64)x))
         d.second = 0
@@ -176,6 +247,75 @@ iterator xaxis_month(min: float, max: float): tuple_xaxis =  # {{{1
             var tup: tuple_xaxis = (siz: 1, nam: name, pos: int(nx))
             yield tup
 
+proc quater_search(x: int, dir: float): tuple[x: float, name: cstring] =  # {{{1
+        var d = times.getLocalTime(times.fromSeconds((int64)x))
+        d.second = 0
+        d.minute = 0
+        d.hour = 0
+        d.monthday = 1
+
+        # 1-12(0-11) -> 0-3 -> 1, 4, 7, 10
+        var i = d.month.ord div 3
+        d.month = Month(1 + i * 3)
+
+        if dir > 0:
+            d = d + times.initInterval(0, 0, 0, 0, 0, 3 * int(dir) + 1, 0)
+            d = d - times.initInterval(0, 0, 0, 0, 1, 0, 0)
+
+        var n: cstring
+        if cfg.mode_q1jan:
+            n = cstring(d.format("yyyy") & "Q" & $(i + 1))
+        elif i < 1:
+            n = cstring($(d.year - 1) & "Q4")
+        else:
+            n = cstring(d.format("yyyy") & "Q" & $(i))
+        return (x: d.toTime().toSeconds(), name: n)
+
+
+proc xaxis_quater_subtick(w: float): tuple[x: float, n: int] =  # {{{1
+        var ti = times.initInterval(0, int(w), 0, 0, 0, 0, 0)
+        console.debug("q-tick: %d-%d-%d", ti.months, ti.days, ti.hours)
+        if ti.months > 0:
+            return (x: 30.0 * 24 * 60 * 60, n: 5)
+        if ti.days > 9:
+            return (x: 14.0 * 24 * 60 * 60, n: 4)
+        return (x: 7.0 * 24 * 60 * 60, n: 4)
+
+
+iterator xaxis_quater(min: float, max: float): tuple_xaxis =  # {{{1
+        var sc = d3.scaleLinear(
+                  ).domain([min, max]).range([cfg.X1, cfg.X2])
+        cfg.sx = sc
+        var x = min
+        var d1pct = (max - min) * 0.01
+        var px = 0.0
+        var n = 0
+        var cur = quater_search(int(x), -0.1)
+        var (sx, nn) = xaxis_quater_subtick(d1pct)
+        while x < max:
+            x = x + sx
+            var nxt = quater_search(int(x), -0.1)
+            n += 1
+            if n < nn:  # sub-tick
+                var nx = sc.to(x)
+                var tup: tuple_xaxis = (siz: 2, nam: (cstring)"", pos: int(nx))
+                yield tup
+            if nxt.name == cur.name:
+                var nx = sc.to(x)
+                var tup: tuple_xaxis = (siz: 2, nam: (cstring)"", pos: int(nx))
+                yield tup
+
+            n = 0
+            cur = nxt
+            var nx = sc.to(cur.x)
+            var name = cur.name
+            if cur.x - px < 5 * d1pct:
+                name = ""
+            else:
+                px = cur.x
+            var tup: tuple_xaxis = (siz: 1, nam: name, pos: int(nx))
+            yield tup
+
 iterator xaxis_percent_month(min: float, max: float): tuple_xaxis =  # {{{1
         var sc = cfg.sx
         var px = 0.0
@@ -198,18 +338,39 @@ iterator xaxis_percent_month(min: float, max: float): tuple_xaxis =  # {{{1
             var tup: tuple_xaxis = (siz: siz, nam: name, pos: (int)nx)
             yield tup
 
+
 iterator xaxis_iter(min: float, max: float): tuple_xaxis =  # {{{1
         var x1, x2: float
         var dmy: cstring
-        case cfg.mode_xrange
-        of 0, 4, 6, 12:
-            if cfg.mode_xrange == 0:
+        var typ = cfg.mode_xrange div 100
+        var spn = cfg.mode_xrange mod 100
+        case typ
+        of 1:  # week
+            if spn == 0:
                 (x1, x2) = (max, 0.1)
             else:
-                (x1, x2) = (min, float(cfg.mode_xrange) - 0.1)
+                (x1, x2) = (min, float(spn) * 4.0 - 0.1)
+            (x2, dmy) = week_search(int(x1), x2)
+            (x1, dmy) = week_search(int(min), -0.1)
+            for i in xaxis_week(x1, x2):
+                yield i
+        of 2:  # month
+            if spn == 0:
+                (x1, x2) = (max, 0.1)
+            else:
+                (x1, x2) = (min, float(spn) - 0.1)
             (x2, dmy) = month_search(int(x1), x2)
             (x1, dmy) = month_search(int(min), -0.1)
             for i in xaxis_month(x1, x2):
+                yield i
+        of 3:  # quater
+            if spn == 0:
+                (x1, x2) = (max, 0.1)
+            else:
+                (x1, x2) = (min, float(spn div 3) - 0.1)
+            (x2, dmy) = quater_search(int(x1), x2)
+            (x1, dmy) = quater_search(int(min), -0.1)
+            for i in xaxis_quater(x1, x2):
                 yield i
         else:
             for i in xaxis_percent_month(min, max):
@@ -321,12 +482,26 @@ proc on_csv(dat: seq[JsObject]): void =  # {{{1
             r.draggable()
             discard t.x(0).y(r.get(0).y)
 
+        # all rects to draggable
         # var rects = SVG.select("rect").draggable()
 
-        # enable save button
-        var jqc = jq("#save").off("click").on("click", on_save)
+
+proc on_refresh(ev: Event): void =  # {{{1
+        var loc = window.location
+        var url = loc.protocol & cstring("//") & loc.host & loc.pathname
+        var xrange = jq("#mode").val()
+        window.location.href = url & "?xrange=" & xrange
+
 
 proc on_init(ev: Event): void =  # {{{1
+        var url = initURL(window.location.href)
+        var xrange = url.searchParams.get("xrange")
+        if xrange != nil:
+            cfg.mode_xrange = int(atof(xrange))
+
+        jq("#save").off("click").on("click", on_save)
+        jq("#refresh").off("click").on("click", on_refresh)
+
         var d3c = d3.csv("./gannt-d3.csv").then(on_csv)
 
         # var svg = d3.select("svg")

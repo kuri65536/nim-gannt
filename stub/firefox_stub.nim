@@ -11,8 +11,10 @@ type
   Blob* = ref BlobObj
   BlobObj = object of RootObj
 
+  UrlSearchParams* = ref RootObj
   UrlStub* = ref UrlObj
-  UrlObj = ref object of RootObj
+  UrlObj = object of RootObj
+    searchParams*: UrlSearchParams
 
   JsPromise* = ref object of RootObj
 
@@ -20,12 +22,15 @@ type
 proc newBlob*(ary: array[0..0, cstring],
               opt: JsAssoc): Blob {. importcpp: "new Blob(@)" .}
 proc URL*(w: Window): UrlStub {. importcpp: "@.URL" .}
+proc initURL*(src: cstring): UrlStub {. importc: "new URL" .}
+
+proc href*(loc: Location, src: cstring): void {. importcpp: "#.href = #" .}
 
 {.push importcpp.}
 
 proc createObjectURL*(url: UrlStub, blob: Blob): cstring
 proc revokeObjectURL*(url: UrlStub, src: cstring)
-
+proc get*(usp: UrlSearchParams, name: cstring): cstring
 
 proc then*(self: JsPromise, cb: proc (ev: Event)): JsPromise
 proc then*(self: JsPromise, cb: proc (dat: seq[JsObject])): JsPromise
