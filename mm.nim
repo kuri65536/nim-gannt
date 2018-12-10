@@ -22,13 +22,19 @@ type
     idx: int
     begin: cstring
     fin {.importc: "end".} : cstring
+    text: cstring
 
   MM = ref object of RootObj  # {{{1
     items: seq[MmItem]
     target_item: MmItem
 
+  Config = object of RootObj  # {{{1
+    sx: D3Scale
+    sy: D3Scale
+
   tuple_xaxis = tuple[siz: int, nam: cstring, pos: int]
 
+var cfg = Config()
 var mi_index = 0
 var mi_items: seq[MmItem] = @[]
 
@@ -37,6 +43,7 @@ proc color(self: MmItem): cstring =
 
 method index(self: MmItem): int {.base.} =
     mi_index = mi_index + 1
+    self.idx = mi_index
     return mi_index
 
 
@@ -53,12 +60,15 @@ proc mi_span(self: JsObject, sx: D3Scale): string =  # {{{1
     var bg = sx.to(self.mi_begin())
     return $int(ed - bg)
 
-proc mi_create(dat: JsObject): float =  # {{{1
-        var item = MmItem()
+proc mi_create(dat: JsObject): cstring =  # {{{1
+        var item = (MmItem)dat
         mi_items.add(item)
         var n = item.index()
-        ((MmItem)dat).idx = n
-        return 1.0
+        return $(cfg.sy.to((float)n) - cfg.sy.to((float)(n - 1)))
+
+proc mi_xmlid(dat: JsObject): cstring =  # {{{1
+        var item = (MmItem)dat
+        return (cstring)("mmitem-" & $(item.idx))
 
 proc xaxis_month_1st(x1: float, x2: float): cstring =  # {{{1
     if true:
@@ -137,7 +147,7 @@ proc on_csv_yaxis(min: float, max: float, sc: D3Scale): void =  # {{{1
         var svg = SVG.select("svg").get(0).doc()
         var y1 = sc.to(min)
         var y2 = sc.to(max)
-        var bbox = svg.rect(200, int(y2 - y1))
+        var bbox = svg.rect(199, int(y2 - y1))
         discard bbox.x(0).y(50)
         rect_black(bbox, "yaxis: bbox")
 
@@ -173,14 +183,16 @@ proc on_csv(dat: seq[JsObject]): void =  # {{{1
         var dom = [minx, maxx]
         var rng = [200.0, 1000.0]
         var sx = d3.scaleLinear().domain(dom).range(rng)
+        cfg.sx = sx
 
         # create x-axis ruler
         on_csv_xaxis(minx, maxx, sx)
 
         # y domain
-        dom = [0.0, (float)len(dat)]
+        dom = [0.0, 450.0 / 20.0]  # (float)len(dat)]
         rng = [50.0, 500.0]
         var sy = d3.scaleLinear().domain(dom).range(rng)
+        cfg.sy = sy
 
         # create y-axis ruler
         on_csv_yaxis(dom[0], dom[1], sy)
@@ -190,13 +202,20 @@ proc on_csv(dat: seq[JsObject]): void =  # {{{1
         var rect = svg.selectAll("rect"
           ).data(dat
           ).enter().append("rect"
-          ).attr("height", proc (x: JsObject): cstring = $(sy.to(mi_create(x)))
+          ).attr("height", mi_create
           ).attr("width", proc (x: JsObject): cstring = ((MmItem)x).mi_span(sx)
           ).attr("x", proc (x: JsObject): cstring =
                  $(sx.to(((MmItem)x).mi_begin()))
           ).attr("y", proc (x: JsObject): cstring = $(sy.to(((MmItem)x).idx))
+          ).attr("id", mi_xmlid
           ).attr("fill", proc (x: JsObject): cstring = ((MmItem)x).color()
           )
+
+        var g = SVG.select("svg").get(0).doc()
+        for i in mi_items:
+            var t = g.text(i.text)
+            var r = SVG.select("rect#" & mi_xmlid(i)).get(0)
+            discard t.x(0).y(r.y)
 
         # make bars draggable
         var rects = SVG.select("rect").draggable()

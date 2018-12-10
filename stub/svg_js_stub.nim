@@ -18,7 +18,7 @@ type
 {.push importcpp.}
 
 proc select*(svg: SvgJs, tag: cstring): SvgSet
-proc get*(svg: SvgSet, n: int): SvgElement
+proc get*(svg: SvgSet, n: int): SvgParent
 proc doc*(svg: SvgElement): SvgParent
 proc group*(svg: SvgParent): SvgParent
 proc rect*(svg: SvgParent, w: int, h: int): SvgRect
