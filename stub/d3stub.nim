@@ -47,7 +47,7 @@ proc append*(self: D3Selector, tag: cstring): D3Selector
 # proc attr*(self: D3Selector, attr: string,
 #            chooser: proc (obj: JsObject): float): D3Selector
 proc attr*(self: D3Selector, name: cstring,
-           chooser: proc (obj: JsObject): cstring): D3Selector
+           chooser: proc (obj: JsObject): cstring): D3Selector {.discardable.}
 proc attr*(self: D3Selector, name: cstring, value: cstring): D3Selector
 
 {.pop.}

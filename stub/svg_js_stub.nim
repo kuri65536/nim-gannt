@@ -36,7 +36,7 @@ proc height*(svg: SvgRect): int
 proc size*(svg: SvgText, siz: int): SvgText
 
 # svg.draggable.js
-proc draggable*(tags: SvgSet): SvgSet
+proc draggable*(tags: SvgSet): SvgSet {.discardable.}
 
 {.pop.}
 
