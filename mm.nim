@@ -19,6 +19,7 @@ type
     items: seq[MmItem]
     target_item: MmItem
 
+  tuple_xaxis = tuple[siz: int, nam: cstring, pos: int]
 
 var mi_index = 0
 var mi_items: seq[MmItem] = @[]
@@ -51,6 +52,15 @@ proc mi_create(dat: JsObject): float =  # {{{1
         ((MmItem)dat).idx = n
         return 1.0
 
+iterator xaxis_month(min: float, max: float, sc: D3Scale): tuple_xaxis =
+        var x = min
+        var sx = (max - min) * 0.01
+        while x < max:
+            var nx = sc.to(x)
+            x += sx
+            var tup: tuple_xaxis = (siz: 1, nam: (cstring)"", pos: (int)nx)
+            yield tup
+
 proc rect_black(rect: SvgRect, msg: cstring): void =  # {{{1
         discard rect.fill("none").stroke("#000", 2, 1.0)
         if msg == "":
@@ -67,10 +77,16 @@ proc on_csv_xaxis(xmin: float, xmax: float, sx: D3Scale): void =  # {{{1
         discard bbox.x(int(x1)).y(0)
         rect_black(bbox, "xaxis: bbox")
 
+        var px = 0
         var g = svg.group()
-        discard g.line((int)x1 + 10, 0, (int)x1 + 10, 50)
-        discard g.line((int)x1 + 20, 0, (int)x1 + 20, 50)
-        discard g.line((int)x1 + 30, 0, (int)x1 + 30, 50)
+        for tup in xaxis_month(xmin, xmax, sx):
+            if tup.pos - px < 2:
+                continue
+            px = tup.pos
+            if tup.siz == 1:
+                discard g.line(px, 0, px, 50)
+            if tup.siz == 2:
+                discard g.line(px, 0, px, 30)
         discard g.stroke("#000", 2, 1.0)
 
 proc on_csv_yaxis(min: float, max: float, sc: D3Scale): void =  # {{{1
