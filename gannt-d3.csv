@@ -1,0 +1,7 @@
+prior,file,line,begin,end,beginstr,endstr,text
+4,sample.txt, 76,1448929320,1449540319,2015/12/01 09:22:00,2015/12/08 11:05:19,fix pending function
+1,sample.txt, 57,1448940120,1449081566,2015/12/01 12:22:00,2015/12/03 03:39:26,output property as ReST directives
+3,sample.txt, 41,1448929080,1448936100,2015/12/01 09:18:00,2015/12/01 11:15:00,output in gantchart with text
+3,sample.txt, 38,1449281853,1451500939,2018/12/07 19-40-49,2018/12/07 19-40-55,edit bars
+2,sample.txt, 54,1448929320,1449168139,2018/12/07 19-33-35,2018/12/07 19-33-39,drag and extend the bars with edge.
+2,sample.txt, 54,1448929320,1449168139,2018/12/07 12-58-36,2018/12/07 12-58-40,include style in SVG output.
