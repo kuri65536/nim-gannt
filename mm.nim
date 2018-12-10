@@ -112,14 +112,15 @@ proc xaxis_month_1st(x1: float, x2: float): cstring =  # {{{1
     #         return (cstring)""
     #     return (cstring)($(d2.getYear()) & "/" & $(m + 1))
 
-proc month_search(x: int, dir: int): tuple[x: float, name: cstring] =  # {{{1
+proc month_search(x: int, dir: float): tuple[x: float, name: cstring] =  # {{{1
         var d = times.getLocalTime(times.fromSeconds((int64)x))
         d.second = 0
         d.minute = 0
         d.hour = 0
         if dir > 0:
             d.monthday = 27
-            d = d + times.initInterval(0, 0, 0, 0, 7, 0, 0)
+            d = d + times.initInterval(0, 0, 0, 0, 7, int(dir), 0)
+            d.monthday = 1
             d = d - times.initInterval(0, 0, 0, 0, 1, 0, 0)
         else:
             d.monthday = 1
@@ -130,17 +131,16 @@ proc month_search(x: int, dir: int): tuple[x: float, name: cstring] =  # {{{1
 
 iterator xaxis_month(min: float, max: float): tuple_xaxis =  # {{{1
         var px = 0.0
-        var tup1 = month_search(int(min), -1)
-        var tup2 = month_search(int(max), 1)
         var sc = d3.scaleLinear(
-                  ).domain([tup1.x, tup2.x]).range([cfg.X1, cfg.X2])
+                  ).domain([min, max]).range([cfg.X1, cfg.X2])
         cfg.sx = sc
-        var sx = (tup2.x - tup1.x) * 0.01
+        var x = min
+        var sx = (max - min) * 0.01
         var nn = 5
-        while tup1.x < tup2.x:
-            tup1.x = tup1.x + sx
+        while x < max:
+            x = x + sx
             nn += 1
-            var cur = month_search((int)tup1.x, -1)
+            var cur = month_search(int(x), -1)
             var nx = sc.to(cur.x)
             if int(nx) == int(px):
                 continue
@@ -176,9 +176,17 @@ iterator xaxis_percent_month(min: float, max: float): tuple_xaxis =  # {{{1
             yield tup
 
 iterator xaxis_iter(min: float, max: float): tuple_xaxis =  # {{{1
+        var x1, x2: float
+        var dmy: cstring
         case cfg.mode_xrange
-        of 0:
-            for i in xaxis_month(min, max):
+        of 0, 4, 6, 12:
+            if cfg.mode_xrange == 0:
+                (x1, x2) = (max, 0.1)
+            else:
+                (x1, x2) = (min, float(cfg.mode_xrange) - 0.1)
+            (x2, dmy) = month_search(int(x1), x2)
+            (x1, dmy) = month_search(int(min), -0.1)
+            for i in xaxis_month(x1, x2):
                 yield i
         else:
             for i in xaxis_percent_month(min, max):
