@@ -29,11 +29,17 @@ proc html*(jq: jQuerySelector): cstring
 proc val*(jq: jQuerySelector): cstring
 proc attr*(jq: jQuerySelector, name: cstring, src: cstring): jQuerySelector
 proc append*(jq: jQuerySelector, src: jQuerySelector): jQuerySelector
+proc append*(jq: jQuerySelector, src: cstring): jQuerySelector {.discardable.}
+proc remove*(jq: jQuerySelector): jQuerySelector {.discardable.}
+
+proc css*(jq: jQuerySelector,
+          name: cstring, value: cstring): jQuerySelector {.discardable.}
 
 {.pop.}
 
 proc `[]`*(jq: jQuerySelector, i: int): Element {.importcpp: "#[#]" .}
 
+proc jq*(doc: Document): jQuerySelector {.importc: "jQuery", nodecl.}
 proc jq*(selector: cstring): jQuerySelector {.importc: "jQuery", nodecl.}
 
 proc jqwhen*(jq: JQuery, src: cstring): JsPromise

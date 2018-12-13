@@ -7,7 +7,23 @@
   <script src="d3.js"> </script>
   <script src="svg.js"> </script>
   <script src="svg.draggable.js"> </script>
-  <script src="nimcache/mm.js"> </script>
+  <script src="nimcache/mm.js"> </script>t
+  <style><!--
+    #contextmenu {
+        display: none;
+        position: absolute;
+        background: #DDD;
+        border: solid #AAA 2px;
+    }
+    #contextmenu ul {
+        margin: 5px;
+        padding: 5px;
+        list-style: none;
+    }
+    #contextmenu li {
+        list-style: none;
+    }
+  --></style>
 </head>
 <body>
   <svg id="root" width="1000" height="500">
@@ -43,6 +59,11 @@
     </select>
     <button id="refresh">refresh</button>
     <button id="save">save</button>
+  </div>
+  <div id="contextmenu">
+    <ul>
+      <li id="cm-about" style="list-style: none;"> about... </li>
+    </ul>
   </div>
 </body>
 </html>

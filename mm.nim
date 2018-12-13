@@ -39,12 +39,18 @@ type
     mode_title: int
     mode_q1jan: bool
 
-  tuple_xaxis = tuple[siz: int, nam: cstring, pos: int]
+  tuple_xaxis = tuple[siz: int, nam: cstring, pos: int]  # {{{1
 
+  fn_event = (proc(ev: Event) {.nimcall.})  # {{{1
+  # - o .nimcall.
+  # - x .closure.
+
+# {{{1
 var cfg = Config(X1: 200.0, Y1: 50.0, X2: 1000.0, Y2: 500.0,
                  mode_xrange: 0, mode_title: 1, mode_q1jan: false)
 var mi_index = 0
 var mi_items: seq[MmItem] = @[]
+
 
 proc color(self: MmItem): cstring =
     return "#00F"
@@ -123,7 +129,7 @@ proc week_search(x: int, dir: float): tuple[x: float, name: cstring] =  # {{{1
             var n = 6 - d.weekday.ord + 7 * int(dir)
             d = d + times.initInterval(0, 0, 0, 0, n, 0, 0)
         else:
-            console.debug("w-srch: %d-%s-%s", d.weekday.ord, $(d.weekday), d.format("yyyy-MM-dd"))
+            # console.debug("w-srch: %d-%s-%s", d.weekday.ord, $(d.weekday), d.format("yyyy-MM-dd"))
             d = d - times.initInterval(0, 0, 0, 0, d.weekday.ord, 0, 0)
         var w = (d.yearday div 7) + 1
         var n: cstring
@@ -137,7 +143,7 @@ proc week_search(x: int, dir: float): tuple[x: float, name: cstring] =  # {{{1
 
 proc xaxis_week_subtick(w: float): tuple[x: float, n: int] =  # {{{1
         var ti = times.initInterval(0, int(w), 0, 0, 0, 0, 0)
-        console.debug("w-tick: %d-%d-%d", ti.months, ti.days, ti.hours)
+        # console.debug("w-tick: %d-%d-%d", ti.months, ti.days, ti.hours)
         if ti.months > 0:
             return (x: 30.0 * 24 * 60 * 60, n: 10)
         if ti.days > 6:
@@ -162,13 +168,13 @@ iterator xaxis_week(min: float, max: float): tuple_xaxis =  # {{{1
         var px = -5 * sx
         var n = nn + 1
         cur.name = ""
-        console.debug("w-axis-step: %.2f-%d", sx, nn)
+        # console.debug("w-axis-step: %.2f-%d", sx, nn)
         while x < max:
             var nxt = week_search(int(x), -0.1)
             var nx = sc.to(x)
             x = x + sx
             n += 1
-            console.debug("w-axis: %d-%d", n, sc.to(x))
+            # console.debug("w-axis: %d-%d", n, sc.to(x))
             if n < nn or nxt.name == cur.name:  # sub-tick
                 var tup: tuple_xaxis = (siz: 2, nam: (cstring)"", pos: int(nx))
                 yield tup
@@ -203,7 +209,7 @@ proc month_search(x: int, dir: float): tuple[x: float, name: cstring] =  # {{{1
 
 proc xaxis_month_subtick(w: float): tuple[x: float, n: int] =  # {{{1
         var ti = times.initInterval(0, int(w), 0, 0, 0, 0, 0)
-        console.debug("tick: " & $(ti.days))
+        # console.debug("tick: " & $(ti.days))
         if ti.days > 13:
             return (x: 14.0 * 24 * 60 * 60, n: 2)
         if ti.days > 2:
@@ -275,7 +281,7 @@ proc quater_search(x: int, dir: float): tuple[x: float, name: cstring] =  # {{{1
 
 proc xaxis_quater_subtick(w: float): tuple[x: float, n: int] =  # {{{1
         var ti = times.initInterval(0, int(w), 0, 0, 0, 0, 0)
-        console.debug("q-tick: %d-%d-%d", ti.months, ti.days, ti.hours)
+        # console.debug("q-tick: %d-%d-%d", ti.months, ti.days, ti.hours)
         if ti.months > 0:
             return (x: 30.0 * 24 * 60 * 60, n: 5)
         if ti.days > 9:
@@ -382,8 +388,8 @@ proc rect_black(rect: SvgRect, msg: cstring): void =  # {{{1
         discard rect.fill("none").stroke("#000", 2, 1.0)
         if msg == "":
             return
-        console.debug(msg & ": " & $(rect.x()) & "," & $(rect.y()) &
-                      "-" & $(rect.width()) & "," & $(rect.height()))
+        # console.debug(msg & ": " & $(rect.x()) & "," & $(rect.y()) &
+        #               "-" & $(rect.width()) & "," & $(rect.height()))
 
 
 proc on_csv_xaxis(min: float, max: float): void =  # {{{1
@@ -501,6 +507,58 @@ proc on_refresh(ev: Event): void =  # {{{1
         window.location.href = url & "?xrange=" & xrange & "&title=" & title
 
 
+proc on_cm_focus(ev: Event) =  # {{{1
+        console.debug("on_cm_focus")
+
+proc on_cm_newbar(ev: Event) =  # {{{1
+        console.debug("on_cm_newbar")
+
+iterator cm_menuitems_at(x, y: int  # {{{1
+                         ): tuple[id, text: string, callback: fn_event] =
+        var id_area = 0
+        if x > int(cfg.X1):
+            if y > int(cfg.Y1):
+                id_area = 3
+            else:
+                id_area = 1
+        elif y > int(cfg.Y1):
+            id_area = 2
+        case id_area
+        of 1:
+            yield (id: "cm_focus_xrange", text: "Change range",
+                   callback: on_cm_focus)
+            yield (id: "cm_focus_xmin", text: "Select start", callback: on_cm_focus)
+            yield (id: "cm_focus_xmax", text: "Select end", callback: on_cm_focus)
+        of 2:
+            yield (id: "cm_newbar", text: "Create bar", callback: on_cm_newbar)
+        of 3:
+            yield (id: "cm_focus_xrange", text: "Change range", callback: on_cm_focus)
+            yield (id: "cm_focus_title", text: "Edit text", callback: on_cm_focus)
+            yield (id: "cm_newbar", text: "Create bar", callback: on_cm_newbar)
+        else:
+            yield (id: "cm_newbar", text: "Create bar", callback: on_cm_newbar)
+
+proc on_contextmenu(ev: Event): void =  # {{{1
+        ev.preventDefault()
+        var x: int = ev.pageX
+        var y: int = ev.pageY
+        jq("#contextmenu").css("left", $(x - 10) & "px"
+                         ).css("top", $(y - 10) & "px"
+                         ).css("display", "block")
+        jq("#contextmenu li").remove()
+        var ul = jq("#contextmenu ul")
+        for tup in cm_menuitems_at(x, y):
+            # fetch menu on svg item...
+            # display menu...
+            # enable click events...
+            ul.append("<li id=\"" & tup.id & "\">" & tup.text & "</li>")
+            jq("#" & tup.id).off("click").on("click", tup.callback)
+
+
+proc on_cm_leave(ev: Event): void =  # {{{1
+        jq("#contextmenu").css("display", "none")
+
+
 proc on_init(ev: Event): void =  # {{{1
         var url = initURL(window.location.href)
         var xrange = url.searchParams.get("xrange")
@@ -510,10 +568,13 @@ proc on_init(ev: Event): void =  # {{{1
         if title != nil:
             cfg.mode_title = int(atof(title))
 
+        jq(document).off("contextmenu").on("contextmenu", on_contextmenu)
         jq("#xrange").off("change").on("change", on_refresh)
         jq("#title").off("change").on("change", on_refresh)
         jq("#save").off("click").on("click", on_save)
         jq("#refresh").off("click").on("click", on_refresh)
+        jq("#contextmenu").off("mouseout").on("mouseout", on_cm_leave)
+        # jq("#contextmenu").off("onblur").on("onblur", on_cm_leave)
 
         var d3c = d3.csv("./gannt-d3.csv").then(on_csv)
 
