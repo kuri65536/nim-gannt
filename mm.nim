@@ -71,14 +71,14 @@ proc mi_span(self: JsObject): cstring =  # {{{1
 
 proc mi_y(obj: JsObject): cstring =  # {{{1
     var item = (MmItem)obj
-    var y = cfg.sy.to(item.idx - 1)
+    var y = cfg.sy.to(item.idx)
     return $(y)
 
 proc mi_create(dat: JsObject): cstring =  # {{{1
         var item = (MmItem)dat
         mi_regist(item)
         var n = item.idx
-        return $(cfg.sy.to((float)n) - cfg.sy.to((float)(n - 1)))
+        return $(cfg.sy.to(float(n + 1)) - cfg.sy.to(float(n)))
 
 proc mi_xmlid(dat: JsObject): cstring =  # {{{1
         var item = (MmItem)dat
