@@ -472,6 +472,18 @@ proc on_save_csv(ev: Event): void =  # {{{1
             dat &= "\n"
         on_save_core(dat, "csv")
 
+
+proc create_title(g: SvgParent, r: SvgElement, t: cstring): void =  # {{{1
+            var t = g.text(t)
+            case cfg.mode_title
+            of 1:
+                t.x(r.x).y(r.y)
+            of 2:
+                t.x(r.x + SvgRect(r).width).y(r.y)
+            else:
+                t.x(0).y(r.y)
+
+
 proc on_csv(dat: seq[JsObject]): void =  # {{{1
         console.debug("inst:" & $(len(dat)))
         mi_index = 0
@@ -505,20 +517,66 @@ proc on_csv(dat: seq[JsObject]): void =  # {{{1
 
         var g = SVG.select("svg").get(0).doc()
         for i in mi_items:
-            var t = g.text(i.text)
             # make bars draggable
             var r = SVG.select("rect#" & mi_xmlid(i))
             r.draggable()
-            case cfg.mode_title
-            of 1:
-                t.x(r.get(0).x).y(r.get(0).y)
-            of 2:
-                t.x(r.get(0).x + SvgRect(r.get(0)).width).y(r.get(0).y)
-            else:
-                t.x(0).y(r.get(0).y)
+            create_title(g, r.get(0), i.text)
 
         # all rects to draggable
         # var rects = SVG.select("rect").draggable()
+
+
+proc initMmItem(): MmItem =  # {{{1
+        result = MmItem(newJsObject())
+        mi_items.add(result)
+        discard result.index()
+
+
+proc create_new_bar(t1, t2: cstring): void =  # {{{1
+        if len(t1) < 1:
+            console.debug("new_bar: title text is not specified.")
+            return
+        var mi = initMmItem()
+        mi.begin = $(cfg.rx.to((cfg.X2 + cfg.X1)/ 3))
+        mi.fin = $(cfg.rx.to((cfg.X2 + cfg.X1) / 2))
+        mi.text = t1
+
+        var svg = SVG.select("svg").get(0).doc()
+        var x1 = cfg.sx.to(atof(mi.begin))
+        var x2 = cfg.sx.to(atof(mi.fin))
+        var y1 = cfg.sy.to(mi.idx)
+        var y2 = cfg.sy.to(mi.idx + 1)
+        var r = svg.rect(int(x2 - x1), int(y2 - y1))
+        discard r.id(mi.mi_xmlid()
+                ).fill(mi.color())
+        discard r.x(int(x1)).y(int(y1))
+        SVG.select("#" & mi.mi_xmlid()).draggable()
+        create_title(svg, r, mi.text)
+
+
+proc create_new_text(t1, t2: cstring): void =  # {{{1
+        var svg = SVG.select("svg").get(0).doc()
+
+
+proc create_new_arrow(t1, t2: cstring): void =  # {{{1
+        var svg = SVG.select("svg").get(0).doc()
+
+
+proc on_new_object(ev: Event): void =  # {{{1
+        var sel = $(jq("#new_object").val())  # jq(ev).target()
+        var t1 = jq("#new_text1").val()
+        var t2 = jq("#new_text2").val()
+        case sel
+        of "bar":
+            create_new_bar(t1, t2)
+        of "text":
+            create_new_text(t1, t2)
+        of "arrow":
+            create_new_arrow(t1, t2)
+        # of "0":
+        else:
+            sel = ""
+        discard jq("#new_object").val("0")
 
 
 proc on_refresh(ev: Event): void =  # {{{1
@@ -593,6 +651,7 @@ proc on_init(ev: Event): void =  # {{{1
         jq(document).off("contextmenu").on("contextmenu", on_contextmenu)
         jq("#xrange").off("change").on("change", on_refresh)
         jq("#title").off("change").on("change", on_refresh)
+        jq("#new_object").off("change").on("change", on_new_object)
         jq("#save").off("click").on("click", on_save)
         jq("#save_csv").off("click").on("click", on_save_csv)
         jq("#refresh").off("click").on("click", on_refresh)

@@ -25,6 +25,7 @@ proc rect*(svg: SvgParent, w: int, h: int): SvgRect
 proc line*(svg: SvgParent, x: int, y: int, w: int, h: int): SvgLine
 proc text*(svg: SvgParent, t: cstring): SvgText
 
+proc id*(svg: SvgElement, src: cstring): SvgElement
 proc fill*(svg: SvgElement, src: cstring): SvgElement
 proc x*(svg: SvgElement, x: int): SvgElement {.discardable.}
 proc y*(svg: SvgElement, y: int): SvgElement {.discardable.}
