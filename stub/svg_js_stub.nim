@@ -13,7 +13,9 @@ type
   SvgParent* = ref object of SvgElement
   SvgRect* {.importc.} = ref object of SvgElement
   SvgLine* {.importc.} = ref object of SvgElement
+  SvgPath* {.importc.} = ref object of SvgElement
   SvgText* {.importc.} = ref object of SvgElement
+  SvgMarker* {.importc.} = ref object of SvgElement
 
 {.push importcpp.}
 
@@ -24,6 +26,11 @@ proc group*(svg: SvgParent): SvgParent
 proc rect*(svg: SvgParent, w: int, h: int): SvgRect
 proc line*(svg: SvgParent, x: int, y: int, w: int, h: int): SvgLine
 proc text*(svg: SvgParent, t: cstring): SvgText
+proc path*(svg: SvgParent, t: cstring): SvgPath {.discardable.}
+proc marker*(svg: SvgParent, vx: int, vy: int,
+             figure: proc(cont: SvgParent)): SvgMarker {.discardable.}
+proc marker*(svg: SvgElement,
+             pos: cstring, mk: SvgMarker): SvgElement {.discardable.}
 
 proc id*(svg: SvgElement, src: cstring): SvgElement
 proc fill*(svg: SvgElement, src: cstring): SvgElement
@@ -45,6 +52,8 @@ proc stroke*(svg: SvgElement, col: cstring,
              w: int): SvgElement {.importcpp: "#.stroke({color: #, width: #})".}
 proc stroke*(svg: SvgElement, col: cstring, w: int,
              op: float): SvgElement {.importcpp: "#.stroke({color: #, width: #, opacity: #})".}
+
+proc len*(svg: SvgSet): int {.importcpp: "#.length()".}
 
 var SVG* {.importc, nodecl.}: SvgJs
 

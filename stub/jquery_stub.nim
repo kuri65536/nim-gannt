@@ -38,6 +38,7 @@ proc css*(jq: jQuerySelector,
 
 {.pop.}
 
+proc len*(jq: jQuerySelector): int {.importcpp: "#.length" .}
 proc `[]`*(jq: jQuerySelector, i: int): Element {.importcpp: "#[#]" .}
 
 proc jq*(doc: Document): jQuerySelector {.importc: "jQuery", nodecl.}

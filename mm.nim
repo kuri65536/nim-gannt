@@ -12,10 +12,14 @@ import jsffi
 import jsconsole
 import dom
 
+# special stub files from me.
 import firefox_stub
 import jquery_stub
 import d3stub
 import svg_js_stub
+
+# own libraries.
+import markers
 
 
 type
@@ -103,6 +107,23 @@ proc mi_create(dat: JsObject): cstring =  # {{{1
 proc mi_xmlid(dat: JsObject): cstring =  # {{{1
         var item = (MmItem)dat
         return (cstring)("mmitem-" & $(item.idx))
+
+proc mi_select(src: cstring): cstring =  # {{{1
+        var xmlid = cstring("")
+        if strutils.isDigit($(src)):
+            var n = int(atof(src))
+            if n >= len(mi_items):
+                return ""
+            var mi = mi_items[n]
+            xmlid = mi.mi_xmlid()
+        else:
+            # test with jQuery, so SVG selector raise exception
+            # if src is not valid XML id string.
+            var sel = jq("#" & src)
+            if len(sel) < 1:
+                return ""
+            xmlid = src
+        return xmlid
 
 proc xaxis_month_1st(x1: float, x2: float): cstring =  # {{{1
     if true:
@@ -525,11 +546,31 @@ proc on_csv(dat: seq[JsObject]): void =  # {{{1
         # all rects to draggable
         # var rects = SVG.select("rect").draggable()
 
+        var mk = g.marker(10, 10, marker_arrow)
+        discard mk.id("marker-1")
+
 
 proc initMmItem(): MmItem =  # {{{1
         result = MmItem(newJsObject())
         mi_items.add(result)
         discard result.index()
+
+
+proc create_new_arrow_core(r1, r2: SvgRect): void =  # {{{1
+        var x1 = int(r1.x() + r1.width())
+        var x2 = int(r2.x())
+        var y1 = int(r1.y() + int(r1.height() / 2))
+        var y2 = int(r2.y() + int(r2.height() / 2))
+        var svg = SVG.select("svg").get(0).doc()
+        var lin = svg.line(x1, y1, x2, y2)
+
+        # line style.
+        var mk = SvgMarker(SVG.select("marker").get(0))
+        discard lin.stroke("#000", 2, 1.0)
+        discard lin.marker("end", mk)
+
+        # TODO: register arrows to group
+        # var arw = initMmArrow()
 
 
 proc create_new_bar(t1, t2: cstring): void =  # {{{1
@@ -555,11 +596,36 @@ proc create_new_bar(t1, t2: cstring): void =  # {{{1
 
 
 proc create_new_text(t1, t2: cstring): void =  # {{{1
+        if len(t1) < 1:
+            console.debug("new_txt: title text is not specified.")
+            return
+        var y = int(cfg.sy.to(mi_index))
+        if len(t2) > 0:
+            y = int(atof(t2))
         var svg = SVG.select("svg").get(0).doc()
+        var txt = svg.text(t1)
+        var x = 0
+        discard txt.x(x).y(y)
 
 
 proc create_new_arrow(t1, t2: cstring): void =  # {{{1
-        var svg = SVG.select("svg").get(0).doc()
+        if len(t1) < 1 or len(t2) < 1:
+            console.debug("new_arw: IDs are not specified")
+            return
+        var id1 = mi_select(t1)
+        var id2 = mi_select(t2)
+        if len(id1) < 1:
+            console.debug("new_arw: ID1 can not be found")
+            return
+        if len(id2) < 1:
+            console.debug("new_arw: ID2 can not be found")
+            return
+        var r1 = SVG.select("#" & id1)
+        var r2 = SVG.select("#" & id2)
+        if len(id1) < 1 or len(id2) < 1:
+            console.debug("new_arw: ")
+            return
+        create_new_arrow_core(SvgRect(r1.get(0)), SvgRect(r2.get(0)))
 
 
 proc on_new_object(ev: Event): void =  # {{{1
