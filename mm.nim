@@ -6,6 +6,7 @@
 #
 # import macros
 import times
+import strutils
 
 import jsffi
 import jsconsole
@@ -34,6 +35,7 @@ type
     X2: float
     Y2: float
     sx: D3Scale
+    rx: D3Scale  # TODO: unified to sx.
     sy: D3Scale
     mode_xrange: int
     mode_title: int
@@ -160,6 +162,8 @@ proc xaxis_week_subtick(w: float): tuple[x: float, n: int] =  # {{{1
 iterator xaxis_week(min: float, max: float): tuple_xaxis =  # {{{1
         var sc = d3.scaleLinear(
                   ).domain([min, max]).range([cfg.X1, cfg.X2])
+        cfg.rx = d3.scaleLinear(
+                  ).domain([cfg.X1, cfg.X2]).range([min, max])
         cfg.sx = sc
         var x = min
         var d1pct = (max - min) * 0.01
@@ -428,9 +432,7 @@ proc on_csv_yaxis(min: float, max: float, sc: D3Scale): void =  # {{{1
         discard bbox.x(0).y((int)cfg.Y1)
         rect_black(bbox, "yaxis: bbox")
 
-proc on_save(ev: Event): void =  # {{{1
-        var dat = jq("#root").html()  # SVG
-        dat = "<svg>" & dat & "</svg>"
+proc on_save_core(dat: cstring, ext: cstring): void =  # {{{1
         var anc = jq("<a style=\"display: none;\" />")
         var opt = newJsAssoc[string, string]()
         opt["type"] = "data:attachment/text"
@@ -438,7 +440,7 @@ proc on_save(ev: Event): void =  # {{{1
         var url = window.URL.createObjectURL(blob)
         # console.log(url)
         var chn = anc.attr("href", url
-                    ).attr("download", "download.svg")
+                    ).attr("download", "download." & ext)
         chn = jq("body").append(anc)
         anc[0].click()
         window.URL.revokeObjectURL(url)
@@ -449,6 +451,26 @@ proc on_save(ev: Event): void =  # {{{1
         # ls.blob = dat
         # ls.mime = "data/quoted-printable"
         # Location.href = ls.addr
+
+proc on_save(ev: Event): void =  # {{{1
+        var dat = jq("#root").html()  # SVG
+        dat = "<svg>" & dat & "</svg>"
+        on_save_core(dat, "svg")
+
+proc on_save_csv(ev: Event): void =  # {{{1
+        const fmt = "yyyy/MM/dd hh:mm:ss"
+        var dat: cstring = "prior,file,line,begin,end,beginstr,endstr,text\n"
+        for i in mi_items:
+            var r = SVG.select("rect#" & mi_xmlid(i)).get(0)
+            var x1 = cfg.rx.to(r.x)
+            var x2 = cfg.rx.to(r.x + SvgRect(r).width())
+            var d1 = times.getLocalTime(times.fromSeconds(x1))
+            var d2 = times.getLocalTime(times.fromSeconds(x2))
+            dat &= "1,sample.txt,  1," & int(x1).intToStr(9) & ","
+            dat &= int(x2).intToStr(9) & ","
+            dat &= d1.format(fmt) & "," & d2.format(fmt) & "," & i.text
+            dat &= "\n"
+        on_save_core(dat, "csv")
 
 proc on_csv(dat: seq[JsObject]): void =  # {{{1
         console.debug("inst:" & $(len(dat)))
@@ -572,6 +594,7 @@ proc on_init(ev: Event): void =  # {{{1
         jq("#xrange").off("change").on("change", on_refresh)
         jq("#title").off("change").on("change", on_refresh)
         jq("#save").off("click").on("click", on_save)
+        jq("#save_csv").off("click").on("click", on_save_csv)
         jq("#refresh").off("click").on("click", on_refresh)
         jq("#contextmenu").off("mouseout").on("mouseout", on_cm_leave)
         # jq("#contextmenu").off("onblur").on("onblur", on_cm_leave)

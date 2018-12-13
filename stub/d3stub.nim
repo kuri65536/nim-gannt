@@ -54,6 +54,8 @@ proc attr*(self: D3Selector, name: cstring, value: cstring): D3Selector
 
 proc to*(self: D3Scale, val: float): float {.importcpp: "#(#)" .}
 proc to*(self: D3Scale, val: int): int {.importcpp: "#(#)" .}
+proc revert*(self: D3Scale, val: float): float {.importcpp: "#(#)" .}
+proc revert*(self: D3Scale, val: int): float {.importcpp: "#(#)" .}
 
 var
   d3* {.importc, nodecl.}: D3
