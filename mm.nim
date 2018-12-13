@@ -20,30 +20,14 @@ import svg_js_stub
 
 # own libraries.
 import markers
+from config import cfg
+import mmitem
 
 
 type
-  MmItem = ref object of JsObject  # {{{1
-    idx: int
-    begin: cstring
-    fin {.importc: "end".} : cstring
-    text: cstring
-
   MM = ref object of RootObj  # {{{1
     items: seq[MmItem]
     target_item: MmItem
-
-  Config = object of RootObj  # {{{1
-    X1: float
-    Y1: float
-    X2: float
-    Y2: float
-    sx: D3Scale
-    rx: D3Scale  # TODO: unified to sx.
-    sy: D3Scale
-    mode_xrange: int
-    mode_title: int
-    mode_q1jan: bool
 
   tuple_xaxis = tuple[siz: int, nam: cstring, pos: int]  # {{{1
 
@@ -52,19 +36,11 @@ type
   # - x .closure.
 
 # {{{1
-var cfg = Config(X1: 200.0, Y1: 50.0, X2: 1000.0, Y2: 500.0,
-                 mode_xrange: 0, mode_title: 1, mode_q1jan: false)
 var mi_index = 0
-var mi_items: seq[MmItem] = @[]
 
 
 proc color(self: MmItem): cstring =
     return "#00F"
-
-method index(self: MmItem): int {.base.} =
-    mi_index = mi_index + 1
-    self.idx = mi_index
-    return mi_index
 
 
 proc atof(src: cstring): float {.importc: "parseFloat" .}  # {{{1
@@ -100,8 +76,8 @@ proc mi_y(obj: JsObject): cstring =  # {{{1
 
 proc mi_create(dat: JsObject): cstring =  # {{{1
         var item = (MmItem)dat
-        mi_items.add(item)
-        var n = item.index()
+        mi_regist(item)
+        var n = item.idx
         return $(cfg.sy.to((float)n) - cfg.sy.to((float)(n - 1)))
 
 proc mi_xmlid(dat: JsObject): cstring =  # {{{1
@@ -112,9 +88,9 @@ proc mi_select(src: cstring): cstring =  # {{{1
         var xmlid = cstring("")
         if strutils.isDigit($(src)):
             var n = int(atof(src))
-            if n >= len(mi_items):
+            if n >= mi_len():
                 return ""
-            var mi = mi_items[n]
+            var mi = mi_get(n)
             xmlid = mi.mi_xmlid()
         else:
             # test with jQuery, so SVG selector raise exception
@@ -481,7 +457,7 @@ proc on_save(ev: Event): void =  # {{{1
 proc on_save_csv(ev: Event): void =  # {{{1
         const fmt = "yyyy/MM/dd hh:mm:ss"
         var dat: cstring = "prior,file,line,begin,end,beginstr,endstr,text\n"
-        for i in mi_items:
+        for i in mi_items_all():
             var r = SVG.select("rect#" & mi_xmlid(i)).get(0)
             var x1 = cfg.rx.to(r.x)
             var x2 = cfg.rx.to(r.x + SvgRect(r).width())
@@ -537,7 +513,7 @@ proc on_csv(dat: seq[JsObject]): void =  # {{{1
           )
 
         var g = SVG.select("svg").get(0).doc()
-        for i in mi_items:
+        for i in mi_items_all():
             # make bars draggable
             var r = SVG.select("rect#" & mi_xmlid(i))
             r.draggable()
@@ -552,7 +528,7 @@ proc on_csv(dat: seq[JsObject]): void =  # {{{1
 
 proc initMmItem(): MmItem =  # {{{1
         result = MmItem(newJsObject())
-        mi_items.add(result)
+        mi_regist(result)
         discard result.index()
 
 
@@ -577,22 +553,10 @@ proc create_new_bar(t1, t2: cstring): void =  # {{{1
         if len(t1) < 1:
             console.debug("new_bar: title text is not specified.")
             return
-        var mi = initMmItem()
-        mi.begin = $(cfg.rx.to((cfg.X2 + cfg.X1)/ 3))
-        mi.fin = $(cfg.rx.to((cfg.X2 + cfg.X1) / 2))
-        mi.text = t1
 
-        var svg = SVG.select("svg").get(0).doc()
-        var x1 = cfg.sx.to(atof(mi.begin))
-        var x2 = cfg.sx.to(atof(mi.fin))
-        var y1 = cfg.sy.to(mi.idx)
-        var y2 = cfg.sy.to(mi.idx + 1)
-        var r = svg.rect(int(x2 - x1), int(y2 - y1))
-        discard r.id(mi.mi_xmlid()
-                ).fill(mi.color())
-        discard r.x(int(x1)).y(int(y1))
-        SVG.select("#" & mi.mi_xmlid()).draggable()
-        create_title(svg, r, mi.text)
+        var s1 = int(cfg.rx.to((cfg.X2 + cfg.X1)/ 3))
+        var s2 = int(cfg.rx.to((cfg.X2 + cfg.X1) / 2))
+        create_new_mmitem(s1, s2, -1, t1)
 
 
 proc create_new_text(t1, t2: cstring): void =  # {{{1

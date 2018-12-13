@@ -33,6 +33,8 @@ proc marker*(svg: SvgElement,
              pos: cstring, mk: SvgMarker): SvgElement {.discardable.}
 
 proc id*(svg: SvgElement, src: cstring): SvgElement
+proc id*(svg: SvgElement): cstring
+proc attr*(svg: SvgElement, name, value: cstring): SvgElement
 proc fill*(svg: SvgElement, src: cstring): SvgElement
 proc x*(svg: SvgElement, x: int): SvgElement {.discardable.}
 proc y*(svg: SvgElement, y: int): SvgElement {.discardable.}
