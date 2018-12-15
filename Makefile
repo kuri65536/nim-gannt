@@ -33,7 +33,7 @@ launch: nimcache/mm.js .download
 	$(browse) http://localhost:8000/gannt.html
 	$(server)
 
-nimcache/mm.js: mm.nim
+nimcache/mm.js: mm.nim stub/*.nim
 	nim js -p:stub mm.nim
 
 fetch:

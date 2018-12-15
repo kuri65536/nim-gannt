@@ -49,7 +49,7 @@ proc mi_begin(obj: JsObject): float =  # {{{1
     var item = (MmItem)obj
     if cfg.mode_from_dtstring:
         var dt = times.parse($(item.beginstr), $(cfg.fmt_dtstring))
-        console.debug("mi_begin:dt:" & dt.format("yyyy-MM-dd"))
+        # console.debug("mi_begin:dt:" & dt.format("yyyy-MM-dd"))
         return dt.toTime().toSeconds()
     return atof(item.begin)
 
@@ -61,7 +61,7 @@ proc mi_end(self: JsObject): float =  # {{{1
     var item = (MmItem)self
     if cfg.mode_from_dtstring:
         var dt = times.parse($(item.endstr), $(cfg.fmt_dtstring))
-        console.debug("mi_end:dt:" & dt.format("yyyy-MM-dd"))
+        # console.debug("mi_end:dt:" & dt.format("yyyy-MM-dd"))
         return dt.toTime().toSeconds()
     return atof(item.fin)
 
@@ -72,6 +72,7 @@ proc mi_end2(self: JsObject): cstring =  # {{{1
 proc mi_span(self: JsObject): cstring =  # {{{1
     var ed = cfg.sx.to(self.mi_end())
     var bg = cfg.sx.to(self.mi_begin())
+    console.debug("mi_span: " & $(bg) & "," & $(ed))
     var ret = ed - bg
     if ret < 1.0:
         ret = 1.0
@@ -82,11 +83,19 @@ proc mi_y(obj: JsObject): cstring =  # {{{1
     var y = cfg.sy.to(item.idx)
     return $(y)
 
-proc mi_create(dat: JsObject): cstring =  # {{{1
+proc mi_height(dat: JsObject): cstring =  # {{{1
         var item = (MmItem)dat
-        mi_regist(item)
+        # console.debug("mi_create: " & $(item.idx))
         var n = item.idx
         return $(cfg.sy.to(float(n + 1)) - cfg.sy.to(float(n)))
+
+
+proc mi_create(dat: JsObject): MmItem {.discardable.} =  # {{{1
+        var item = (MmItem)dat
+        mi_regist(item)
+        # console.debug("mi_create: " & $(item.idx))
+        return item
+
 
 proc mi_xmlid(dat: JsObject): cstring =  # {{{1
         var item = (MmItem)dat
@@ -544,6 +553,9 @@ proc on_save_csv(ev: Event): void =  # {{{1
 
 
 proc create_title(g: SvgParent, r: SvgElement, t: cstring): void =  # {{{1
+            if r == nil:
+                console.debug("title: skip with no rect..." & (t))
+                return
             var t = g.text(t)
             case cfg.mode_title
             of 1:
@@ -572,24 +584,31 @@ proc on_csv(dat: seq[JsObject]): void =  # {{{1
         # create y-axis ruler
         on_csv_yaxis(dom[0], dom[1], sy)
 
+        for i in dat:
+            var t = MmItem(i).text
+            var x1 = int(mi_begin(i))
+            var x2 = int(mi_end(i))
+            create_new_mmitem(x1, x2, -1, t)
+
         # create rectangles
-        var svg = d3.select("svg")
-        svg.selectAll("rect"
-          ).data(dat
-          ).enter().append("rect"
-          ).attr("height", mi_create
-          ).attr("width", mi_span
-          ).attr("x", mi_begin2
-          ).attr("y", mi_y
-          ).attr("id", mi_xmlid
-          ).attr("fill", proc (x: JsObject): cstring = ((MmItem)x).color()
-          )
+        # var svg = d3.select("svg")
+        # svg.selectAll("rect"
+        #   ).data(dat
+        #   ).enter().append("rect"
+        #   ).attr("height", mi_height
+        #   ).attr("width", mi_span
+        #   ).attr("x", mi_begin2
+        #   ).attr("y", mi_y
+        #   ).attr("id", mi_xmlid
+        #   ).attr("fill", proc (x: JsObject): cstring = ((MmItem)x).color()
+        #   )
 
         var g = SVG.select("svg").get(0).doc()
         for i in mi_items_all():
             # make bars draggable
             var r = SVG.select("rect#" & mi_xmlid(i))
             r.draggable()
+            console.debug("tltle:" & $(i.idx) & ":" & i.text)
             create_title(g, r.get(0), i.text)
 
         # all rects to draggable

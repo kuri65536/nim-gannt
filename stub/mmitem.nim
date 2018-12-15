@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 import jsffi
+import jsconsole
 
 import d3stub
 import svg_js_stub
@@ -32,6 +33,7 @@ method index(self: MmItem): int {.base.} =  # {{{1
 proc mi_regist*(mi: MmItem): void =  # {{{1
         mi_items.add(mi)
         mi.idx = len(mi_items) - 1
+        # console.debug("mi_regist: " & $(len(mi_items)))
 
 
 proc mi_len*(): int =  # {{{1
