@@ -47,6 +47,10 @@ proc atof(src: cstring): float {.importc: "parseFloat" .}  # {{{1
 
 proc mi_begin(obj: JsObject): float =  # {{{1
     var item = (MmItem)obj
+    if cfg.mode_from_dtstring:
+        var dt = times.parse($(item.beginstr), $(cfg.fmt_dtstring))
+        console.debug("mi_begin:dt:" & dt.format("yyyy-MM-dd"))
+        return dt.toTime().toSeconds()
     return atof(item.begin)
 
 proc mi_begin2(self: JsObject): cstring =  # {{{1
@@ -55,6 +59,10 @@ proc mi_begin2(self: JsObject): cstring =  # {{{1
 
 proc mi_end(self: JsObject): float =  # {{{1
     var item = (MmItem)self
+    if cfg.mode_from_dtstring:
+        var dt = times.parse($(item.endstr), $(cfg.fmt_dtstring))
+        console.debug("mi_end:dt:" & dt.format("yyyy-MM-dd"))
+        return dt.toTime().toSeconds()
     return atof(item.fin)
 
 proc mi_end2(self: JsObject): cstring =  # {{{1
