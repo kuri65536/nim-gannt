@@ -119,6 +119,74 @@ proc xaxis_month_1st(x1: float, x2: float): cstring =  # {{{1
     #         return (cstring)""
     #     return (cstring)($(d2.getYear()) & "/" & $(m + 1))
 
+
+proc day_search(x: int, dir: float): tuple[x: float, name: cstring] =  # {{{1
+        var d = times.getLocalTime(times.fromSeconds((int64)x))
+        d.second = 0
+        d.minute = 0
+        d.hour = 0
+        if dir > 0:
+            d = d + times.initInterval(0, 0, 0, 0, 1, 0, 0)
+            d = d - times.initInterval(0, 2, 0, 0, 0, 0, 0)
+        var n: cstring
+        if d.monthday == 1:
+            n = d.format("mm")
+        else:
+            n = d.format("d")
+        return (x: d.toTime().toSeconds(), name: n)
+
+
+proc xaxis_day_subtick(w: float): tuple[x: float, n: int] =  # {{{1
+        var ti = times.initInterval(0, int(w), 0, 0, 0, 0, 0)
+        # console.debug("w-tick: %d-%d-%d", ti.months, ti.days, ti.hours)
+        if ti.months > 0:
+            return (x: 30.0 * 24 * 60 * 60, n: 10)
+        if ti.days > 6:
+            return (x: 7.0 * 24 * 60 * 60, n: 20)
+        if ti.days > 2:
+            return (x: 3.0 * 24 * 60 * 60, n: 6)
+        if ti.days > 1:
+            return (x: 2.0 * 24 * 60 * 60, n: 4)
+        if ti.hours > 11:
+            return (x: 1.0 * 24 * 60 * 60, n: 14)
+        return (x: 1.0 * 24 * 60 * 60, n: 7)
+
+
+iterator xaxis_day(min: float, max: float): tuple_xaxis =  # {{{1
+        var sc = d3.scaleLinear(
+                  ).domain([min, max]).range([cfg.X1, cfg.X2])
+        cfg.rx = d3.scaleLinear(
+                  ).domain([cfg.X1, cfg.X2]).range([min, max])
+        cfg.sx = sc
+        var x = min
+        var d1pct = (max - min) * 0.01
+        var cur = day_search(int(x), -0.1)
+        var (sx, nn) = xaxis_day_subtick(d1pct)
+        var px = -5 * sx
+        var n = nn + 1
+        cur.name = ""
+        # console.debug("w-axis-step: %.2f-%d", sx, nn)
+        while x < max:
+            var nxt = day_search(int(x), -0.1)
+            var nx = sc.to(x)
+            x = x + sx
+            n += 1
+            # console.debug("w-axis: %d-%d", n, sc.to(x))
+            if n < nn or nxt.name == cur.name:  # sub-tick
+                var tup: tuple_xaxis = (siz: 2, nam: (cstring)"", pos: int(nx))
+                yield tup
+                continue
+
+            n = 0
+            cur = nxt
+            var name = cur.name
+            if cur.x - px < 5 * d1pct:
+                name = ""
+            else:
+                px = cur.x
+            var tup: tuple_xaxis = (siz: 1, nam: name, pos: int(nx))
+            yield tup
+
 proc week_search(x: int, dir: float): tuple[x: float, name: cstring] =  # {{{1
         var d = times.getLocalTime(times.fromSeconds((int64)x))
         d.second = 0
@@ -224,6 +292,8 @@ proc xaxis_month_subtick(w: float): tuple[x: float, n: int] =  # {{{1
 iterator xaxis_month(min: float, max: float): tuple_xaxis =  # {{{1
         var sc = d3.scaleLinear(
                   ).domain([min, max]).range([cfg.X1, cfg.X2])
+        cfg.rx = d3.scaleLinear(
+                  ).domain([cfg.X1, cfg.X2]).range([min, max])
         cfg.sx = sc
         var x = min
         var d1pct = (max - min) * 0.01
@@ -293,6 +363,8 @@ proc xaxis_quater_subtick(w: float): tuple[x: float, n: int] =  # {{{1
 iterator xaxis_quater(min: float, max: float): tuple_xaxis =  # {{{1
         var sc = d3.scaleLinear(
                   ).domain([min, max]).range([cfg.X1, cfg.X2])
+        cfg.rx = d3.scaleLinear(
+                  ).domain([cfg.X1, cfg.X2]).range([min, max])
         cfg.sx = sc
         var x = min
         var d1pct = (max - min) * 0.01
@@ -324,27 +396,20 @@ iterator xaxis_quater(min: float, max: float): tuple_xaxis =  # {{{1
             var tup: tuple_xaxis = (siz: 1, nam: name, pos: int(nx))
             yield tup
 
-iterator xaxis_percent_month(min: float, max: float): tuple_xaxis =  # {{{1
-        var sc = cfg.sx
-        var px = 0.0
-        var x = min
-        var sx = (max - min) * 0.01
-        var nn = 5
-        while x < max:
-            var nx = sc.to(x)
-            var name = xaxis_month_1st(px, x)
-            var siz = 2
-            px = x
-            if name != "":
-                siz = 1
-                nn += 1
-            if nn < 5:
-                name = ""
-            else:
-                nn = 0
-            x += sx
-            var tup: tuple_xaxis = (siz: siz, nam: name, pos: (int)nx)
-            yield tup
+
+iterator xaxis_auto_range(min: float, max: float): tuple_xaxis =  # {{{1
+        var rng = max - min
+        # if rng < 7 * 24 * 60 * 60:          # in week
+        #
+        if rng < 30 * 24 * 60 * 60:         # in month -> days
+            for i in xaxis_day(min, max):
+                yield i
+        elif rng < 6 * 30 * 24 * 60 * 60:   # in quater or half -> weeks
+            for i in xaxis_week(min, max):
+                yield i
+        elif rng < 2 * 365 * 24 * 60 * 60:  # 2years -> month
+            for i in xaxis_month(min, max):
+                yield i
 
 
 iterator xaxis_iter(min: float, max: float): tuple_xaxis =  # {{{1
@@ -381,7 +446,7 @@ iterator xaxis_iter(min: float, max: float): tuple_xaxis =  # {{{1
             for i in xaxis_quater(x1, x2):
                 yield i
         else:
-            for i in xaxis_percent_month(min, max):
+            for i in xaxis_auto_range(min, max):
                 yield i
 
 
@@ -451,7 +516,7 @@ proc on_save_core(dat: cstring, ext: cstring): void =  # {{{1
 
 proc on_save(ev: Event): void =  # {{{1
         var dat = jq("#root").html()  # SVG
-        dat = "<svg>" & dat & "</svg>"
+        dat = cstring("<svg>") & dat & cstring("</svg>")
         on_save_core(dat, "svg")
 
 proc on_save_csv(ev: Event): void =  # {{{1
@@ -670,6 +735,8 @@ proc on_cm_leave(ev: Event): void =  # {{{1
 
 
 proc on_init(ev: Event): void =  # {{{1
+        cfg.mode_xrange = 0  # TODO: move to config.nim
+
         var url = initURL(window.location.href)
         var xrange = url.searchParams.get("xrange")
         if xrange != nil:

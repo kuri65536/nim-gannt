@@ -12,7 +12,28 @@ else
     d3js:=d3.js
 endif
 
-build:
+ifeq (,windows)
+	browse=start
+else
+	browse=browse
+endif
+
+server:=python
+ifeq ($(server),python)
+    server:=python3 -m http.server 8000
+else
+    error1:
+		echo ???
+		exit 1
+endif
+
+build: nimcache/mm.js
+
+launch: nimcache/mm.js .download
+	$(browse) http://localhost:8000/gannt.html
+	$(server)
+
+nimcache/mm.js: mm.nim
 	nim js -p:stub mm.nim
 
 fetch:
@@ -20,9 +41,11 @@ fetch:
 	cp orig/nim/gannt.html .
 	cp orig/nim/mm.nim .
 
-download:
-	wget https://cdnjs.cloudflare.com/ajax/libs/svg.js/2.7.1/$(svgjs) \
-	    -O svg.js
+download: .download
+
+.download:
+	wget https://code.jquery.com//$(jquery) \
+	    -O jquery.js
 	wget https://cdnjs.cloudflare.com/ajax/libs/svg.js/2.7.1/$(svgjs) \
 	    -O svg.js
 	wget https://github.com/svgdotjs/svg.draggable.js/$(svgdjs) \
@@ -32,4 +55,5 @@ download:
 	wget http://code.jquery.com/$(jquery) -O jquery.js
 	# jQuery Mobile
 	unzip -o d3.zip $(d3js); (mv $(d3js) d3.js || echo)
+	touch .download
 
