@@ -98,7 +98,7 @@ proc create_title(g: SvgParent, r: SvgElement, t: cstring): void =  # {{{1
 
 
 proc create_new_mmitem*(t1, t2, idx: int,  # {{{1
-                        text: cstring): MmItem {.discardable.} =
+                        text: cstring, cls: cstring): MmItem {.discardable.} =
         # <g>
         #   <rect> <text>
         # </g>
@@ -110,6 +110,7 @@ proc create_new_mmitem*(t1, t2, idx: int,  # {{{1
         mi.begin = $(t1)
         mi.fin = $(t2)
         mi.text = text
+        var newidx = mi.idx
         if idx > 0:
             # TODO: specified index => change order...?
             # mi.idx = idx
@@ -118,7 +119,7 @@ proc create_new_mmitem*(t1, t2, idx: int,  # {{{1
 
         var svg = SVG.select("svg").get(0).doc()
         var g = svg.group()
-        discard g.id(idx_to_xmlid(idx))
+        discard g.id(idx_to_xmlid(newidx))
 
         var x1 = cfg.sx.to(float(t1))
         var x2 = cfg.sx.to(float(t2))
@@ -127,7 +128,8 @@ proc create_new_mmitem*(t1, t2, idx: int,  # {{{1
         var rc = g.rect(int(x2 - x1), int(y2 - y1))
         rc.attr("class", "mmitem-normal"
          ).x(int(x1)
-         ).y(int(y1))
+         ).y(int(y1)
+         ).cls("bar-" & cls)
 
         SVG.select("#" & rc.id()).draggable()
         create_title(g, rc, text)
@@ -139,6 +141,7 @@ proc create_new_milestone*(mi: MmItem): MmStone {.discardable.} =  # {{{1
         ret.title = mi.text
         ret.at_or_on = mi_begin(mi)
         mi_stones.add(ret)
+        ret.idx = len(mi_stones) - 1
 
         # draw mile-stones
         var svg = SVG.select("svg").get(0).doc()

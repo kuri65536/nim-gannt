@@ -32,7 +32,7 @@ proc marker*(svg: SvgParent, vx: int, vy: int,
 proc marker*(svg: SvgElement,
              pos: cstring, mk: SvgMarker): SvgElement {.discardable.}
 
-proc id*(svg: SvgElement, src: cstring): SvgElement
+proc id*(svg: SvgElement, src: cstring): SvgElement {.discardable.}
 proc id*(svg: SvgElement): cstring
 proc attr*(svg: SvgElement, name, value: cstring): SvgElement
 proc fill*(svg: SvgElement, src: cstring): SvgElement
@@ -56,6 +56,10 @@ proc stroke*(svg: SvgElement, col: cstring, w: int,
              op: float): SvgElement {.importcpp: "#.stroke({color: #, width: #, opacity: #})".}
 
 proc len*(svg: SvgSet): int {.importcpp: "#.length()".}
+
+proc cls*(svg: SvgElement,
+          value: cstring): SvgElement {.
+              importcpp: "#.attr(\"class\", #)",discardable.}
 
 var SVG* {.importc, nodecl.}: SvgJs
 

@@ -471,6 +471,7 @@ proc on_csv_xaxis(min: float, max: float): void =  # {{{1
         discard bbox.x(int(cfg.X1)).y(0)
         rect_black(bbox, "xaxis: bbox")
 
+        var n = 0
         var px = 0
         var ga = svg.group()
         var g = ga.group()
@@ -479,19 +480,26 @@ proc on_csv_xaxis(min: float, max: float): void =  # {{{1
         for tup in xaxis_iter(min, max):
             # console.debug("x-iter: " & $(tup.pos))
             px = tup.pos
+            n += 1
+            var ns = $(n)
             if tup.siz == 1:
                 var y1 = 0
                 if len(tup.nam) < 1:
                     y1 = 14
-                discard g.line(px, y1, px, int(cfg.Y1))
-                discard g.line(px, int(cfg.Y1), px, int(cfg.Y2))
+                g.line(px, y1, px, int(cfg.Y1)).id("t1-" & ns).cls("xtick1")
+                g.line(px, int(cfg.Y1), px, int(cfg.Y2)
+                ).id("t2-" & ns).cls("xtick2")
             if tup.siz == 2:
-                discard g.line(px, 20, px, int(cfg.Y1))
-                discard gs.line(px, int(cfg.Y1) + 1, px, int(cfg.Y2))
+                g.line(px, 20, px, int(cfg.Y1)).id("s1-" & $(n)
+                ).cls("xtick-sub1")
+                gs.line(px, int(cfg.Y1) + 1, px, int(cfg.Y2)
+                 ).id("s2-" & $(n)).cls("xtick-sub2")
             if len(tup.nam) > 0:
                 discard gt.text(tup.nam).size(10).x(px + 2).y(0)
-        discard g.stroke("#000", 2, 1.0)
-        discard gs.stroke("#999", 1, 1.0)
+        g.stroke("#000", 2, 1.0).id("xtics")
+        gs.stroke("#999", 1, 1.0).id("xtics-sub")
+        ga.id("xaxis")
+
 
 proc on_csv_yaxis(min: float, max: float, sc: D3Scale): void =  # {{{1
         var svg = SVG.select("svg").get(0).doc()
@@ -588,7 +596,7 @@ proc on_csv(dat: seq[JsObject]): void =  # {{{1
                 continue
             var x1 = int(mi_begin(i))
             var x2 = int(mi_end(i))
-            create_new_mmitem(x1, x2, -1, mi.text)
+            create_new_mmitem(x1, x2, -1, mi.text, mi.group)
 
         var g = SVG.select("svg").get(0).doc()
         for i in mi_items_all():
@@ -632,7 +640,7 @@ proc create_new_bar(t1, t2: cstring): void =  # {{{1
 
         var s1 = int(cfg.rx.to((cfg.X2 + cfg.X1)/ 3))
         var s2 = int(cfg.rx.to((cfg.X2 + cfg.X1) / 2))
-        create_new_mmitem(s1, s2, -1, t1)
+        create_new_mmitem(s1, s2, -1, t1, "2")
 
 
 proc create_new_text(t1, t2: cstring): void =  # {{{1
