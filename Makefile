@@ -27,7 +27,7 @@ else
 		exit 1
 endif
 
-build: nimcache/mm.js
+build: .download nimcache/mm.js
 
 launch: nimcache/mm.js .download
 	$(browse) http://localhost:8000/gannt.html
