@@ -4,17 +4,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
+import times
+
 import jsffi
 import jsconsole
 
 import d3stub
 import svg_js_stub
 
+# own libraries.
 from config import cfg
 
 
 type
   MmItem* = ref object of JsObject  # {{{1
+    group*: cstring
     idx*: int
     begin*: cstring
     fin* {.importc: "end".} : cstring
@@ -22,7 +26,16 @@ type
     beginstr*: cstring
     endstr*: cstring
 
+  MmStone* = object of RootObj  # {{{1
+    idx: int
+    at_or_on*: float
+    title*: cstring
+
 var mi_items: seq[MmItem] = @[]
+var mi_stones: seq[MmStone] = @[]
+
+
+proc atof*(src: cstring): float {.importc: "parseFloat" .}  # {{{1
 
 
 method index(self: MmItem): int {.base.} =  # {{{1
@@ -32,7 +45,10 @@ method index(self: MmItem): int {.base.} =  # {{{1
 
 proc mi_regist*(mi: MmItem): void =  # {{{1
         mi_items.add(mi)
-        mi.idx = len(mi_items) - 1
+        var n = 0
+        if len(mi_stones) > 0:
+            n = 1
+        mi.idx = n + len(mi_items) - 1
         # console.debug("mi_regist: " & $(len(mi_items)))
 
 
@@ -46,6 +62,19 @@ proc mi_get*(n: int): MmItem =  # {{{1
 
 proc mi_items_all*(): seq[MmItem] =  # {{{1
         return mi_items
+
+
+proc mi_begin*(obj: JsObject): float =  # {{{1
+    var item = (MmItem)obj
+    if cfg.mode_from_dtstring:
+        var dt = times.parse($(item.beginstr), $(cfg.fmt_dtstring))
+        # console.debug("mi_begin:dt:" & dt.format("yyyy-MM-dd"))
+        return dt.toTime().toSeconds()
+    return atof(item.begin)
+
+
+proc xmlid*(self: MmStone): cstring =  # {{{1
+        return "stone-" & $(self.idx)
 
 
 proc initMmItem*(): MmItem =  # {{{1
@@ -103,6 +132,26 @@ proc create_new_mmitem*(t1, t2, idx: int,  # {{{1
         SVG.select("#" & rc.id()).draggable()
         create_title(g, rc, text)
 
+
+proc create_new_milestone*(mi: MmItem): MmStone {.discardable.} =  # {{{1
+        # create object
+        var ret = MmStone()
+        ret.title = mi.text
+        ret.at_or_on = mi_begin(mi)
+        mi_stones.add(ret)
+
+        # draw mile-stones
+        var svg = SVG.select("svg").get(0).doc()
+        var g = svg.group()
+        discard g.id(ret.xmlid())
+        var x = int(cfg.sx.to(ret.at_or_on))
+        var y = int(cfg.sy.to(0))
+        var t = g.text(ret.title)
+        t.x(x + 10).y(y)
+        var p = g.path("M" & $(x) & " " & $(y + 10))
+        var mk = SvgMarker(SVG.select("#marker-2").get(0))
+        discard p.marker("start", mk)
+        return ret
 
 # end of file {{{1
 # vi: ft=nim:et:ts=4:sw=4:tw=80:nowrap:fdm=marker

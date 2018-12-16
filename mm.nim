@@ -43,16 +43,6 @@ proc color(self: MmItem): cstring =
     return "#00F"
 
 
-proc atof(src: cstring): float {.importc: "parseFloat" .}  # {{{1
-
-proc mi_begin(obj: JsObject): float =  # {{{1
-    var item = (MmItem)obj
-    if cfg.mode_from_dtstring:
-        var dt = times.parse($(item.beginstr), $(cfg.fmt_dtstring))
-        # console.debug("mi_begin:dt:" & dt.format("yyyy-MM-dd"))
-        return dt.toTime().toSeconds()
-    return atof(item.begin)
-
 proc mi_begin2(self: JsObject): cstring =  # {{{1
     var x = cfg.sx.to(self.mi_begin())
     return $(x)
@@ -584,24 +574,21 @@ proc on_csv(dat: seq[JsObject]): void =  # {{{1
         # create y-axis ruler
         on_csv_yaxis(dom[0], dom[1], sy)
 
+        # create tile-stones
         for i in dat:
-            var t = MmItem(i).text
-            var x1 = int(mi_begin(i))
-            var x2 = int(mi_end(i))
-            create_new_mmitem(x1, x2, -1, t)
+            var mi = MmItem(i)
+            if mi.group != "1":
+                continue
+            create_new_milestone(mi)
 
         # create rectangles
-        # var svg = d3.select("svg")
-        # svg.selectAll("rect"
-        #   ).data(dat
-        #   ).enter().append("rect"
-        #   ).attr("height", mi_height
-        #   ).attr("width", mi_span
-        #   ).attr("x", mi_begin2
-        #   ).attr("y", mi_y
-        #   ).attr("id", mi_xmlid
-        #   ).attr("fill", proc (x: JsObject): cstring = ((MmItem)x).color()
-        #   )
+        for i in dat:
+            var mi = MmItem(i)
+            if mi.group == "1":
+                continue
+            var x1 = int(mi_begin(i))
+            var x2 = int(mi_end(i))
+            create_new_mmitem(x1, x2, -1, mi.text)
 
         var g = SVG.select("svg").get(0).doc()
         for i in mi_items_all():
@@ -613,9 +600,6 @@ proc on_csv(dat: seq[JsObject]): void =  # {{{1
 
         # all rects to draggable
         # var rects = SVG.select("rect").draggable()
-
-        var mk = g.marker(10, 10, marker_arrow)
-        discard mk.id("marker-1")
 
 
 proc initMmItem(): MmItem =  # {{{1
@@ -782,6 +766,14 @@ proc on_init(ev: Event): void =  # {{{1
         jq("#contextmenu").off("mouseout").on("mouseout", on_cm_leave)
         # jq("#contextmenu").off("onblur").on("onblur", on_cm_leave)
 
+        # create markers
+        var g = SVG.select("svg").get(0).doc()
+        var mk = g.marker(10, 10, marker_arrow)
+        discard mk.id("marker-1")
+        mk = g.marker(10, 10, marker_milestone)
+        discard mk.id("marker-2")
+
+        # load csv...
         var d3c = d3.csv("./gannt-d3.csv").then(on_csv)
 
         # var svg = d3.select("svg")
