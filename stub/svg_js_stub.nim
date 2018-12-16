@@ -22,6 +22,8 @@ type
 proc select*(svg: SvgJs, tag: cstring): SvgSet
 proc get*(svg: SvgSet, n: int): SvgElement
 proc doc*(svg: SvgElement): SvgParent
+proc defs*(svg: SvgParent): SvgParent
+proc element*(svg: SvgParent, typ: cstring): SvgElement
 proc group*(svg: SvgParent): SvgParent
 proc rect*(svg: SvgParent, w: int, h: int): SvgRect
 proc line*(svg: SvgParent, x: int, y: int, w: int, h: int): SvgLine
@@ -35,6 +37,8 @@ proc marker*(svg: SvgElement,
 proc id*(svg: SvgElement, src: cstring): SvgElement {.discardable.}
 proc id*(svg: SvgElement): cstring
 proc attr*(svg: SvgElement, name, value: cstring): SvgElement
+proc style*(svg: SvgElement, name, value: cstring): SvgElement
+proc words*(svg: SvgElement, value: cstring): SvgElement {.discardable.}
 proc fill*(svg: SvgElement, src: cstring): SvgElement
 proc x*(svg: SvgElement, x: int): SvgElement {.discardable.}
 proc y*(svg: SvgElement, y: int): SvgElement {.discardable.}
@@ -44,6 +48,7 @@ proc width*(svg: SvgRect): int
 proc height*(svg: SvgRect): int
 
 proc size*(svg: SvgText, siz: int): SvgText
+
 
 # svg.draggable.js
 proc draggable*(tags: SvgSet): SvgSet {.discardable.}

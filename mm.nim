@@ -497,7 +497,7 @@ proc on_csv_xaxis(min: float, max: float): void =  # {{{1
             if len(tup.nam) > 0:
                 discard gt.text(tup.nam).size(10).x(px + 2).y(0)
         g.stroke("#000", 2, 1.0).id("xtics")
-        gs.stroke("#999", 1, 1.0).id("xtics-sub")
+        gs.id("xtics-sub")
         ga.id("xaxis")
 
 
@@ -774,8 +774,18 @@ proc on_init(ev: Event): void =  # {{{1
         jq("#contextmenu").off("mouseout").on("mouseout", on_cm_leave)
         # jq("#contextmenu").off("onblur").on("onblur", on_cm_leave)
 
-        # create markers
         var g = SVG.select("svg").get(0).doc()
+
+        # create styles
+        # TODO: CDATA section
+        g.defs().element("style").words(
+            "    .xtick-sub2 {\n" &
+            "        stroke: #DDD;\n" &
+            "        stroke-width: 2;\n" &
+            "        stroke-opacity: 1.0;}\n" &
+            "")
+
+        # create markers
         var mk = g.marker(10, 10, marker_arrow)
         discard mk.id("marker-1")
         mk = g.marker(10, 10, marker_milestone)
