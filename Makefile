@@ -57,3 +57,9 @@ download: .download
 	unzip -o d3.zip $(d3js); (mv $(d3js) d3.js || echo)
 	touch .download
 
+deploy:
+	zip -gur nim-gannt.zip mm.nim stub
+
+deploy_full:
+	zip -gur nim-gannt.zip .git mm.nim stub
+

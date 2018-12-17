@@ -46,6 +46,7 @@ proc x*(svg: SvgElement): int
 proc y*(svg: SvgElement): int
 proc width*(svg: SvgRect): int
 proc height*(svg: SvgRect): int
+proc radius*(svg: SvgRect, r: int): SvgRect {.discardable.}
 
 proc size*(svg: SvgText, siz: int): SvgText
 

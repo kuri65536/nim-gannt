@@ -123,12 +123,15 @@ proc create_new_mmitem*(t1, t2, idx: int,  # {{{1
 
         var x1 = cfg.sx.to(float(t1))
         var x2 = cfg.sx.to(float(t2))
+        var w = int(x2 - x1)
+        if w < 1 and t1 < t2:
+            w = 1
         var y1 = cfg.sy.to(mi.idx)
         var y2 = cfg.sy.to(mi.idx + 1)
-        var rc = g.rect(int(x2 - x1), int(y2 - y1))
-        rc.attr("class", "mmitem-normal"
+        var rc = g.rect(w, int(y2 - y1) - 4)
+        rc.radius(2
          ).x(int(x1)
-         ).y(int(y1)
+         ).y(int(y1) + 2
          ).cls("bar-" & cls)
 
         SVG.select("#" & rc.id()).draggable()
