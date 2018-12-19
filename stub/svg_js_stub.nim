@@ -4,6 +4,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
+import jsffi
+import dom
+
 type
   SvgJs* = ref SvgJsObj
   SvgJsObj {.importc.} = object of RootObj
@@ -53,6 +56,10 @@ proc size*(svg: SvgText, siz: int): SvgText
 
 # svg.draggable.js
 proc draggable*(tags: SvgSet): SvgSet {.discardable.}
+proc draggable*(tags: SvgSet, constraint: JsObject): SvgSet {.discardable.}
+proc draggable*(tags: SvgSet,
+                cb: proc(el: Element, x, y: int, m: JsObject): JsObject
+                ): SvgSet {.discardable.}
 
 {.pop.}
 
@@ -66,6 +73,10 @@ proc len*(svg: SvgSet): int {.importcpp: "#.length()".}
 proc cls*(svg: SvgElement,
           value: cstring): SvgElement {.
               importcpp: "#.attr(\"class\", #)",discardable.}
+
+proc event*(svg: SvgSet, name: cstring,
+            cb: proc(ev: Event): bool): SvgSet {.
+              importcpp: "on", discardable.}
 
 var SVG* {.importc, nodecl.}: SvgJs
 

@@ -132,9 +132,8 @@ proc create_new_mmitem*(t1, t2, idx: int,  # {{{1
         rc.radius(2
          ).x(int(x1)
          ).y(int(y1) + 2
-         ).cls("bar-" & cls)
+         ).cls("bars bar-" & cls)
 
-        SVG.select("#" & rc.id()).draggable()
         create_title(g, rc, text)
 
 

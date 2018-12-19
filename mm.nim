@@ -509,6 +509,22 @@ proc on_csv_yaxis(min: float, max: float, sc: D3Scale): void =  # {{{1
         discard bbox.x(0).y((int)cfg.Y1)
         rect_black(bbox, "yaxis: bbox")
 
+
+proc on_drag_limit_y(el: Element, x, y: int, m: JsObject): JsObject =  # {{{1
+        # m: transformation matrix
+        var ret = newJsObject()
+        ret.x = true
+        return ret
+
+
+proc on_drag_before(ev: Event): bool =  # {{{1
+        console.debug("abc")
+
+
+proc on_drag_finish(ev: Event): bool =  # {{{1
+        console.debug("abc")
+
+
 proc on_save_core(dat: cstring, ext: cstring): void =  # {{{1
         var anc = jq("<a style=\"display: none;\" />")
         var opt = newJsAssoc[string, string]()
@@ -598,13 +614,10 @@ proc on_csv(dat: seq[JsObject]): void =  # {{{1
             var x2 = int(mi_end(i))
             create_new_mmitem(x1, x2, -1, mi.text, mi.group)
 
-        var g = SVG.select("svg").get(0).doc()
-        for i in mi_items_all():
-            # make bars draggable
-            var r = SVG.select("rect#" & mi_xmlid(i))
-            r.draggable()
-            console.debug("tltle:" & $(i.idx) & ":" & i.text)
-            create_title(g, r.get(0), i.text)
+        SVG.select("rect.bars"
+          ).event("beforedrag.mm", on_drag_before
+          ).event("dragend.mm", on_drag_finish
+          ).draggable(on_drag_limit_y)
 
         # all rects to draggable
         # var rects = SVG.select("rect").draggable()
