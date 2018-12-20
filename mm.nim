@@ -37,6 +37,9 @@ type
 
 # {{{1
 var mi_index = 0
+var drag_mode = 0
+var drag_x = 0
+var drag_y = 0
 
 
 proc color(self: MmItem): cstring =
@@ -517,12 +520,64 @@ proc on_drag_limit_y(el: Element, x, y: int, m: JsObject): JsObject =  # {{{1
         return ret
 
 
-proc on_drag_before(ev: Event): bool =  # {{{1
-        console.debug("abc")
+proc on_drag_before(ev: SvgEvent): bool =  # {{{1
+        var svg = SVG.select("svg").get(0).doc()
+        var m = svg.screenCTM()
+        var rc = ev.originalTarget.getBBox()
+        var x = int(ev.detail.event.pageX) - int(m.e)
+        var y = int(ev.detail.event.pageY) - int(m.f)
+        var msg = "-" & $(rc.x)
+
+        drag_x = rc.x
+        drag_y = rc.y
+        if float(x - rc.x) < rc.width / 5:
+            console.debug("left:" & $(ev.detail.event.pageX) & msg)
+            drag_mode = 1
+        elif float(x - rc.x) > rc.width * 4 / 5:
+            console.debug("right:" & $(ev.detail.event.pageX) & msg)
+            drag_mode = 2
+        else:
+            console.debug("center:" & $(ev.detail.event.pageX) & msg)
+            drag_mode = 0
 
 
-proc on_drag_finish(ev: Event): bool =  # {{{1
-        console.debug("abc")
+
+proc on_drag_finish(ev: SvgEvent): bool =  # {{{1
+        var rc = SvgRect(SVG.select("#" & ev.originalTarget.id).get(0))
+        var x = rc.x()
+        case drag_mode:
+        of 1:  # left
+            if x < drag_x:
+                var w = int(drag_x) - x + rc.width()
+                rc.width(w)
+                console.debug("left<:" & $(rc.width))
+            else:
+                var w = rc.width() - (x - int(drag_x))
+                if w < 0:
+                    rc.x(int(drag_x))
+                    console.debug("left0:" & $(rc.x()))
+                else:
+                    rc.width(w)
+                    console.debug("left>:" & $(rc.width()))
+        of 2:  # right
+            if x > drag_x:
+                var w = x - int(drag_x) + rc.width()
+                rc.x(drag_x)
+                rc.width(w)
+                console.debug("rigt>:" & $(rc.width))
+            else:
+                var w = rc.width() - (int(drag_x) - x)
+                if w < 0:
+                    rc.x(drag_x)
+                    rc.x(int(drag_x))
+                    console.debug("rigt0:" & $(rc.x()))
+                else:
+                    rc.x(drag_x)
+                    rc.width(w)
+                    console.debug("rigt<:" & $(rc.width()))
+        else:  # move
+            # nothing
+            console.debug("abc")
 
 
 proc on_save_core(dat: cstring, ext: cstring): void =  # {{{1

@@ -20,12 +20,31 @@ type
   SvgText* {.importc.} = ref object of SvgElement
   SvgMarker* {.importc.} = ref object of SvgElement
 
+  SvgTargetOrg* {.importc.} = ref object of RootObj
+    id* {.importc.}: cstring
+
+  SvgEvent* {.importc.} = ref object of JsObject
+    originalTarget* {.importc.}: SvgTargetOrg
+    detail* {.importc.}: SvgDetail
+
+  SvgDetail* {.importc.} = ref object of JsObject
+    event* {.importc.}: Event
+
+  SvgRect2* {.importc.} = ref object of SvgElement
+    x*, y*, width*, height*: int
+
+  SvgMatrix* {.importc.} = ref object of RootObj
+    a*, b*, c*, d*, e*, f*: float
+
 {.push importcpp.}
 
 proc select*(svg: SvgJs, tag: cstring): SvgSet
+
 proc get*(svg: SvgSet, n: int): SvgElement
 proc doc*(svg: SvgElement): SvgParent
 proc defs*(svg: SvgParent): SvgParent
+proc screenCTM*(svg: SvgParent): SvgMatrix
+
 proc element*(svg: SvgParent, typ: cstring): SvgElement
 proc group*(svg: SvgParent): SvgParent
 proc rect*(svg: SvgParent, w: int, h: int): SvgRect
@@ -47,11 +66,15 @@ proc x*(svg: SvgElement, x: int): SvgElement {.discardable.}
 proc y*(svg: SvgElement, y: int): SvgElement {.discardable.}
 proc x*(svg: SvgElement): int
 proc y*(svg: SvgElement): int
+# proc getBBox*(svg: SvgElement): SvgRect2
 proc width*(svg: SvgRect): int
+proc width*(svg: SvgRect, w: int): SvgRect {.discardable.}
 proc height*(svg: SvgRect): int
 proc radius*(svg: SvgRect, r: int): SvgRect {.discardable.}
 
 proc size*(svg: SvgText, siz: int): SvgText
+
+proc getBBox*(svg: SvgTargetOrg): SvgRect2
 
 
 # svg.draggable.js
@@ -75,7 +98,7 @@ proc cls*(svg: SvgElement,
               importcpp: "#.attr(\"class\", #)",discardable.}
 
 proc event*(svg: SvgSet, name: cstring,
-            cb: proc(ev: Event): bool): SvgSet {.
+            cb: proc(ev: SvgEvent): bool): SvgSet {.
               importcpp: "on", discardable.}
 
 var SVG* {.importc, nodecl.}: SvgJs
