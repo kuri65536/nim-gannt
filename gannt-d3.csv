@@ -1,9 +1,7 @@
 prior,file,line,begin,end,beginstr,endstr,text
-1,sample.txt, 54,1448929320,1449168139,2018/12/07 19-33-35,2018/12/07 19-33-39,drag and extend the bars with edge.
 2,sample.txt, 54,1448929320,1449168139,2018/12/07 12-58-36,2018/12/07 12-58-40,include style in SVG output.
 5,sample.txt, 38,1449281853,1451500939,2018/12/17 06-39-00,2018/12/17 17-30-00,remove d3.js (scaler and csv loading)
 6,sample.txt, 38,1449281853,1451500939,2018/12/17 06-37-27,2018/12/17 17-30-00,remove jquery.js
 7,sample.txt, 38,1449281853,1451500939,2018/12/17 06-41-34,2018/12/17 17-30-00,select the range of sub-ticks
 8,sample.txt, 38,1449281853,1451500939,2018/12/17 06-41-34,2018/12/17 17-30-00,remove hard-code of bar height
-9,sample.txt, 38,1449281853,1451500939,2018/12/17 06-45-59,2018/12/17 17-30-00,fix) file-name `mm`
-9,sample.txt, 38,1449281853,1451500939,2018/12/17 06-41-34,2018/12/17 17-30-00,fix) file positions of modules
+8,sample.txt, 38,1449281853,1451500939,2018/12/21 09-00-28,2018/12/21 17-30-00,drag) show extending bars

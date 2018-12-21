@@ -21,7 +21,7 @@ import svg_js_stub
 # own libraries.
 import markers
 from config import cfg
-import mmitem
+import bars
 
 
 type

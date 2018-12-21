@@ -27,19 +27,19 @@ else
 		exit 1
 endif
 
-build: .download nimcache/mm.js
+build: .download nimcache/gannt.js
 
-launch: nimcache/mm.js .download
+launch: nimcache/gannt.js .download
 	$(browse) http://localhost:8000/gannt.html
 	$(server)
 
-nimcache/mm.js: mm.nim stub/*.nim
-	nim js -p:stub mm.nim
+nimcache/gannt.js: gannt.nim stub/*.nim
+	nim js -p:stub gannt.nim
 
 fetch:
 	cp orig/nim/*.nim stub
 	cp orig/nim/gannt.html .
-	cp orig/nim/mm.nim .
+	cp orig/nim/gannt.nim .
 
 download: .download
 
@@ -58,8 +58,8 @@ download: .download
 	touch .download
 
 deploy:
-	zip -gur nim-gannt.zip mm.nim stub
+	zip -gur nim-gannt.zip *.nim stub
 
 deploy_full:
-	zip -gur nim-gannt.zip .git mm.nim stub
+	zip -gur nim-gannt.zip .git *.nim stub
 
