@@ -49,4 +49,9 @@ proc jqwhen*(jq: JQuery, src: cstring): JsPromise
 
 var jQuery* {.importc, nodecl.}: JQuery
 
+{.push importcpp.}
+proc ajax*(jq: JQuery, url: cstring): JsPromise
+
+{.pop.}
+
 # vi: ft=nim:et:sw=4:tw=80:nowrap

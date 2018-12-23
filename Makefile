@@ -33,7 +33,7 @@ launch: nimcache/gannt.js .download
 	$(browse) http://localhost:8000/gannt.html
 	$(server)
 
-nimcache/gannt.js: gannt.nim stub/*.nim
+nimcache/gannt.js: *.nim stub/*.nim
 	nim js -p:stub gannt.nim
 
 fetch:
@@ -50,11 +50,7 @@ download: .download
 	    -O svg.js
 	wget https://github.com/svgdotjs/svg.draggable.js/$(svgdjs) \
 	    -O svg.draggable.js
-	wget https://github.com/d3/d3/releases/download/v5.7.0/d3.zip \
-	    -O d3.zip
 	wget http://code.jquery.com/$(jquery) -O jquery.js
-	# jQuery Mobile
-	unzip -o d3.zip $(d3js); (mv $(d3js) d3.js || echo)
 	touch .download
 
 deploy:
