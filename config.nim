@@ -4,6 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
+import logging
 import common
 
 type
@@ -22,10 +23,13 @@ type
 
     fmt_dtstring*: cstring
 
+    log_level*: LOGLEVEL
+
 var cfg* = Config(X1: 200.0, Y1: 50.0, X2: 1000.0, Y2: 500.0,
                   mode_xrange: 0, mode_title: 1, mode_q1jan: false,
                   fmt_dtstring: "yyyy/MM/dd hh:mm:ss",
-                  mode_from_dtstring: true)
+                  mode_from_dtstring: true,
+                  log_level: LOGLEVEL.INFO)
 
 # end of file {{{1
 # vi: ft=nim:et:ts=4:sw=4:tw=80:nowrap:fdm=marker

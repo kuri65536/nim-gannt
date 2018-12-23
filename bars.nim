@@ -7,11 +7,11 @@
 import times
 
 import jsffi
-import jsconsole
 
 import svg_js_stub
 
 # own libraries.
+import logging
 import common
 from config import cfg
 
@@ -49,7 +49,7 @@ proc mi_regist*(mi: MmItem): void =  # {{{1
         if len(mi_stones) > 0:
             n = 1
         mi.idx = n + len(mi_items) - 1
-        # console.debug("mi_regist: " & $(len(mi_items)))
+        debg("mi_regist: " & $(len(mi_items)))
 
 
 proc mi_len*(): int =  # {{{1
@@ -68,7 +68,7 @@ proc mi_begin*(obj: JsObject): float =  # {{{1
     var item = (MmItem)obj
     if cfg.mode_from_dtstring:
         var dt = times.parse($(item.beginstr), $(cfg.fmt_dtstring))
-        # console.debug("mi_begin:dt:" & dt.format("yyyy-MM-dd"))
+        debg("mi_begin:dt:" & dt.format("yyyy-MM-dd"))
         return dt.toTime().toSeconds()
     return atof(item.begin)
 
@@ -104,7 +104,7 @@ proc create_new_mmitem*(t1, t2, idx: int,  # {{{1
         # </g>
 
         # if len(t1) < 1:
-        #     console.debug("new_bar: title text is not specified.")
+        #     debg("new_bar: title text is not specified.")
         #     return
         var mi = initMmItem()
         mi.begin = $(t1)

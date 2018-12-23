@@ -9,7 +9,6 @@ import times
 import strutils
 
 import jsffi
-import jsconsole
 import dom
 
 # special stub files from me.
@@ -18,6 +17,7 @@ import jquery_stub
 import svg_js_stub
 
 # own libraries.
+import logging
 import markers
 import common
 from config import cfg
@@ -54,7 +54,7 @@ proc mi_end(self: JsObject): float =  # {{{1
     var item = (MmItem)self
     if cfg.mode_from_dtstring:
         var dt = times.parse($(item.endstr), $(cfg.fmt_dtstring))
-        # console.debug("mi_end:dt:" & dt.format("yyyy-MM-dd"))
+        debg("mi_end:dt:" & dt.format("yyyy-MM-dd"))
         return dt.toTime().toSeconds()
     return atof(item.fin)
 
@@ -65,7 +65,7 @@ proc mi_end2(self: JsObject): cstring =  # {{{1
 proc mi_span(self: JsObject): cstring =  # {{{1
     var ed = cfg.sx.to(self.mi_end())
     var bg = cfg.sx.to(self.mi_begin())
-    console.debug("mi_span: " & $(bg) & "," & $(ed))
+    debg("mi_span: " & $(bg) & "," & $(ed))
     var ret = ed - bg
     if ret < 1.0:
         ret = 1.0
@@ -78,7 +78,7 @@ proc mi_y(obj: JsObject): cstring =  # {{{1
 
 proc mi_height(dat: JsObject): cstring =  # {{{1
         var item = (MmItem)dat
-        # console.debug("mi_create: " & $(item.idx))
+        debg("mi_create: " & $(item.idx))
         var n = item.idx
         return $(cfg.sy.to(float(n + 1)) - cfg.sy.to(float(n)))
 
@@ -86,7 +86,7 @@ proc mi_height(dat: JsObject): cstring =  # {{{1
 proc mi_create(dat: JsObject): MmItem {.discardable.} =  # {{{1
         var item = (MmItem)dat
         mi_regist(item)
-        # console.debug("mi_create: " & $(item.idx))
+        debg("mi_create: " & $(item.idx))
         return item
 
 
@@ -115,7 +115,7 @@ proc xaxis_month_1st(x1: float, x2: float): cstring =  # {{{1
     if true:
         var d1 = times.getLocalTime(times.fromSeconds((int64)x1))
         var d2 = times.getLocalTime(times.fromSeconds((int64)x2))
-        # console.debug("new:" & d2.format("yyyy-MM-dd"))
+        debg("new:" & d2.format("yyyy-MM-dd"))
         if d1.month == d2.month:
             return (cstring)""
         # return (cstring)($(d2.year) & "/" & $(d2.month))
@@ -148,7 +148,7 @@ proc day_search(x: int, dir: float): tuple[x: float, name: cstring] =  # {{{1
 
 proc xaxis_day_subtick(w: float): tuple[x: float, n: int] =  # {{{1
         var ti = times.initInterval(0, int(w), 0, 0, 0, 0, 0)
-        # console.debug("w-tick: %d-%d-%d", ti.months, ti.days, ti.hours)
+        # debg("w-tick: %d-%d-%d", ti.months, ti.days, ti.hours)
         if ti.months > 0:
             return (x: 30.0 * 24 * 60 * 60, n: 10)
         if ti.days > 6:
@@ -175,13 +175,13 @@ iterator xaxis_day(min: float, max: float): tuple_xaxis =  # {{{1
         var px = -5 * sx
         var n = nn + 1
         cur.name = ""
-        # console.debug("w-axis-step: %.2f-%d", sx, nn)
+        # debg("w-axis-step: %.2f-%d", sx, nn)
         while x < max:
             var nxt = day_search(int(x), -0.1)
             var nx = sc.to(x)
             x = x + sx
             n += 1
-            # console.debug("w-axis: %d-%d", n, sc.to(x))
+            # debg("w-axis: %d-%d", n, sc.to(x))
             if n < nn or nxt.name == cur.name:  # sub-tick
                 var tup: tuple_xaxis = (siz: 2, nam: (cstring)"", pos: int(nx))
                 yield tup
@@ -206,7 +206,7 @@ proc week_search(x: int, dir: float): tuple[x: float, name: cstring] =  # {{{1
             var n = 6 - d.weekday.ord + 7 * int(dir)
             d = d + times.initInterval(0, 0, 0, 0, n, 0, 0)
         else:
-            # console.debug("w-srch: %d-%s-%s", d.weekday.ord, $(d.weekday), d.format("yyyy-MM-dd"))
+            # debg("w-srch: %d-%s-%s", d.weekday.ord, $(d.weekday), d.format("yyyy-MM-dd"))
             d = d - times.initInterval(0, 0, 0, 0, d.weekday.ord, 0, 0)
         var w = (d.yearday div 7) + 1
         var n: cstring
@@ -220,7 +220,7 @@ proc week_search(x: int, dir: float): tuple[x: float, name: cstring] =  # {{{1
 
 proc xaxis_week_subtick(w: float): tuple[x: float, n: int] =  # {{{1
         var ti = times.initInterval(0, int(w), 0, 0, 0, 0, 0)
-        # console.debug("w-tick: %d-%d-%d", ti.months, ti.days, ti.hours)
+        # debg("w-tick: %d-%d-%d", ti.months, ti.days, ti.hours)
         if ti.months > 0:
             return (x: 30.0 * 24 * 60 * 60, n: 10)
         if ti.days > 6:
@@ -247,13 +247,13 @@ iterator xaxis_week(min: float, max: float): tuple_xaxis =  # {{{1
         var px = -5 * sx
         var n = nn + 1
         cur.name = ""
-        # console.debug("w-axis-step: %.2f-%d", sx, nn)
+        # debg("w-axis-step: %.2f-%d", sx, nn)
         while x < max:
             var nxt = week_search(int(x), -0.1)
             var nx = sc.to(x)
             x = x + sx
             n += 1
-            # console.debug("w-axis: %d-%d", n, sc.to(x))
+            # debg("w-axis: %d-%d", n, sc.to(x))
             if n < nn or nxt.name == cur.name:  # sub-tick
                 var tup: tuple_xaxis = (siz: 2, nam: (cstring)"", pos: int(nx))
                 yield tup
@@ -288,7 +288,7 @@ proc month_search(x: int, dir: float): tuple[x: float, name: cstring] =  # {{{1
 
 proc xaxis_month_subtick(w: float): tuple[x: float, n: int] =  # {{{1
         var ti = times.initInterval(0, int(w), 0, 0, 0, 0, 0)
-        # console.debug("tick: " & $(ti.days))
+        debg("tick: " & $(ti.days))
         if ti.days > 13:
             return (x: 14.0 * 24 * 60 * 60, n: 2)
         if ti.days > 2:
@@ -362,7 +362,7 @@ proc quater_search(x: int, dir: float): tuple[x: float, name: cstring] =  # {{{1
 
 proc xaxis_quater_subtick(w: float): tuple[x: float, n: int] =  # {{{1
         var ti = times.initInterval(0, int(w), 0, 0, 0, 0, 0)
-        # console.debug("q-tick: %d-%d-%d", ti.months, ti.days, ti.hours)
+        # debg("q-tick: %d-%d-%d", ti.months, ti.days, ti.hours)
         if ti.months > 0:
             return (x: 30.0 * 24 * 60 * 60, n: 5)
         if ti.days > 9:
@@ -464,8 +464,8 @@ proc rect_black(rect: SvgRect, msg: cstring): void =  # {{{1
         discard rect.fill("none").stroke("#000", 2, 1.0)
         if msg == "":
             return
-        # console.debug(msg & ": " & $(rect.x()) & "," & $(rect.y()) &
-        #               "-" & $(rect.width()) & "," & $(rect.height()))
+        debg($(msg) & ": " & $(rect.x()) & "," & $(rect.y()) &
+             "-" & $(rect.width()) & "," & $(rect.height()))
 
 
 proc on_csv_xaxis(min: float, max: float): void =  # {{{1
@@ -481,7 +481,7 @@ proc on_csv_xaxis(min: float, max: float): void =  # {{{1
         var gs = ga.group()
         var gt = ga.group()
         for tup in xaxis_iter(min, max):
-            # console.debug("x-iter: " & $(tup.pos))
+            debg("x-iter: " & $(tup.pos))
             px = tup.pos
             n += 1
             var ns = $(n)
@@ -531,13 +531,13 @@ proc on_drag_before(ev: SvgEvent): bool =  # {{{1
         drag_x = rc.x
         drag_y = rc.y
         if float(x - rc.x) < rc.width / 5:
-            console.debug("left:" & $(ev.detail.event.pageX) & msg)
+            debg("left:" & $(ev.detail.event.pageX) & msg)
             drag_mode = 1
         elif float(x - rc.x) > rc.width * 4 / 5:
-            console.debug("right:" & $(ev.detail.event.pageX) & msg)
+            debg("right:" & $(ev.detail.event.pageX) & msg)
             drag_mode = 2
         else:
-            console.debug("center:" & $(ev.detail.event.pageX) & msg)
+            debg("center:" & $(ev.detail.event.pageX) & msg)
             drag_mode = 0
 
 
@@ -550,34 +550,34 @@ proc on_drag_finish(ev: SvgEvent): bool =  # {{{1
             if x < drag_x:
                 var w = int(drag_x) - x + rc.width()
                 rc.width(w)
-                console.debug("left<:" & $(rc.width))
+                debg("left<:" & $(rc.width))
             else:
                 var w = rc.width() - (x - int(drag_x))
                 if w < 0:
                     rc.x(int(drag_x))
-                    console.debug("left0:" & $(rc.x()))
+                    debg("left0:" & $(rc.x()))
                 else:
                     rc.width(w)
-                    console.debug("left>:" & $(rc.width()))
+                    debg("left>:" & $(rc.width()))
         of 2:  # right
             if x > drag_x:
                 var w = x - int(drag_x) + rc.width()
                 rc.x(drag_x)
                 rc.width(w)
-                console.debug("rigt>:" & $(rc.width))
+                debg("rigt>:" & $(rc.width))
             else:
                 var w = rc.width() - (int(drag_x) - x)
                 if w < 0:
                     rc.x(drag_x)
                     rc.x(int(drag_x))
-                    console.debug("rigt0:" & $(rc.x()))
+                    debg("rigt0:" & $(rc.x()))
                 else:
                     rc.x(drag_x)
                     rc.width(w)
-                    console.debug("rigt<:" & $(rc.width()))
+                    debg("rigt<:" & $(rc.width()))
         else:  # move
             # nothing
-            console.debug("abc")
+            debg("abc")
 
 
 proc on_save_core(dat: cstring, ext: cstring): void =  # {{{1
@@ -586,7 +586,7 @@ proc on_save_core(dat: cstring, ext: cstring): void =  # {{{1
         opt["type"] = "data:attachment/text"
         var blob = newBlob([dat], opt)
         var url = window.URL.createObjectURL(blob)
-        # console.log(url)
+        warn(url)
         var chn = anc.attr("href", url
                     ).attr("download", "download." & ext)
         chn = jq("body").append(anc)
@@ -623,7 +623,7 @@ proc on_save_csv(ev: Event): void =  # {{{1
 
 proc create_title(g: SvgParent, r: SvgElement, t: cstring): void =  # {{{1
             if r == nil:
-                console.debug("title: skip with no rect..." & (t))
+                debg("title: skip with no rect..." & $(t))
                 return
             var t = g.text(t)
             case cfg.mode_title
@@ -636,7 +636,7 @@ proc create_title(g: SvgParent, r: SvgElement, t: cstring): void =  # {{{1
 
 
 proc on_csv(dat: seq[JsObject]): void =  # {{{1
-        console.debug("inst:" & $(len(dat)))
+        debg("inst:" & $(len(dat)))
         mi_index = 0
 
         # x domain, create x-axis ruler
@@ -683,7 +683,7 @@ iterator ajax_text_split_cols(row: string): cstring =  # {{{1
         var f_esc = false
         var col = 0
         var cell = ""
-        console.debug("row..." & row)
+        debg("row..." & row)
         for c2 in row:
             if f_quote:
                 if f_esc:
@@ -705,23 +705,23 @@ iterator ajax_text_split_cols(row: string): cstring =  # {{{1
                 f_esc = true
                 continue
             elif c2 == ',':
-                console.debug("cells..." & cell)
+                debg("cells..." & cell)
                 yield cell
                 col += 1
                 cell = ""
                 continue
             cell &= c2
         if len(cell) > 0:
-            console.debug("cells..." & cell)
+            debg("cells..." & cell)
             yield cell
 
 
 proc ajax_text(data, textStatus: cstring, jqXHR: JsObject): void =  # {{{1
         var f_first = true
         var dat: seq[JsObject] = @[]
-        console.debug("ajax_text..." & data)
+        debg("ajax_text..." & data)
         for row in splitLines($(data)):
-            console.debug("lines..." & $(len(dat)))
+            debg("lines..." & $(len(dat)))
             if f_first:
                 f_first = false
                 continue
@@ -778,7 +778,7 @@ proc create_new_arrow_core(r1, r2: SvgRect): void =  # {{{1
 
 proc create_new_bar(t1, t2: cstring): void =  # {{{1
         if len(t1) < 1:
-            console.debug("new_bar: title text is not specified.")
+            debg("new_bar: title text is not specified.")
             return
 
         var s1 = int(cfg.rx.to((cfg.X2 + cfg.X1)/ 3))
@@ -788,7 +788,7 @@ proc create_new_bar(t1, t2: cstring): void =  # {{{1
 
 proc create_new_text(t1, t2: cstring): void =  # {{{1
         if len(t1) < 1:
-            console.debug("new_txt: title text is not specified.")
+            debg("new_txt: title text is not specified.")
             return
         var y = int(cfg.sy.to(mi_index))
         if len(t2) > 0:
@@ -801,20 +801,20 @@ proc create_new_text(t1, t2: cstring): void =  # {{{1
 
 proc create_new_arrow(t1, t2: cstring): void =  # {{{1
         if len(t1) < 1 or len(t2) < 1:
-            console.debug("new_arw: IDs are not specified")
+            debg("new_arw: IDs are not specified")
             return
         var id1 = mi_select(t1)
         var id2 = mi_select(t2)
         if len(id1) < 1:
-            console.debug("new_arw: ID1 can not be found")
+            debg("new_arw: ID1 can not be found")
             return
         if len(id2) < 1:
-            console.debug("new_arw: ID2 can not be found")
+            debg("new_arw: ID2 can not be found")
             return
         var r1 = SVG.select("#" & id1)
         var r2 = SVG.select("#" & id2)
         if len(id1) < 1 or len(id2) < 1:
-            console.debug("new_arw: ")
+            debg("new_arw: ")
             return
         create_new_arrow_core(SvgRect(r1.get(0)), SvgRect(r2.get(0)))
 
@@ -845,10 +845,10 @@ proc on_refresh(ev: Event): void =  # {{{1
 
 
 proc on_cm_focus(ev: Event) =  # {{{1
-        console.debug("on_cm_focus")
+        debg("on_cm_focus")
 
 proc on_cm_newbar(ev: Event) =  # {{{1
-        console.debug("on_cm_newbar")
+        debg("on_cm_newbar")
 
 iterator cm_menuitems_at(x, y: int  # {{{1
                          ): tuple[id, text: string, callback: fn_event] =
@@ -897,6 +897,7 @@ proc on_cm_leave(ev: Event): void =  # {{{1
 
 
 proc on_init(ev: Event): void =  # {{{1
+        setLevel(cfg.log_level)
         cfg.mode_xrange = 0  # TODO: move to config.nim
 
         var url = initURL(window.location.href)

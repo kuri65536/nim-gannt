@@ -5,7 +5,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 import jsffi
-import jsconsole
+
+import logging
 
 
 type
@@ -52,7 +53,7 @@ proc range*(self: var D3Scale, minmax: array[0..1, float]
 
 proc to*(self: D3Scale, x: float): float =  # {{{1
     var ret = self.a * (x - self.b) + self.c
-    console.debug("scale.to: " & $(x) & "->" & $(ret))
+    debg("scale.to: " & $(x) & "->" & $(ret))
     return ret
 
 
