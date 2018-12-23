@@ -33,7 +33,9 @@ proc revokeObjectURL*(url: UrlStub, src: cstring)
 proc get*(usp: UrlSearchParams, name: cstring): cstring
 
 proc then*(self: JsPromise, cb: proc (ev: Event)): JsPromise
-proc then*(self: JsPromise, cb: proc (dat: seq[JsObject])): JsPromise
+# proc then*(self: JsPromise, cb: proc (dat: seq[JsObject])): JsPromise
+proc then*(self: JsPromise,
+           cb: proc (data, textStatus: cstring, jqXHR: JsObject)): JsPromise
 # proc error*(self: JsPromise, cb: proc ()): JsPromise
 
 {.pop.}

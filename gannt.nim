@@ -15,11 +15,11 @@ import dom
 # special stub files from me.
 import firefox_stub
 import jquery_stub
-import d3stub
 import svg_js_stub
 
 # own libraries.
 import markers
+import common
 from config import cfg
 import bars
 
@@ -163,9 +163,9 @@ proc xaxis_day_subtick(w: float): tuple[x: float, n: int] =  # {{{1
 
 
 iterator xaxis_day(min: float, max: float): tuple_xaxis =  # {{{1
-        var sc = d3.scaleLinear(
+        var sc = initScaleLinear(
                   ).domain([min, max]).range([cfg.X1, cfg.X2])
-        cfg.rx = d3.scaleLinear(
+        cfg.rx = initScaleLinear(
                   ).domain([cfg.X1, cfg.X2]).range([min, max])
         cfg.sx = sc
         var x = min
@@ -235,9 +235,9 @@ proc xaxis_week_subtick(w: float): tuple[x: float, n: int] =  # {{{1
 
 
 iterator xaxis_week(min: float, max: float): tuple_xaxis =  # {{{1
-        var sc = d3.scaleLinear(
+        var sc = initScaleLinear(
                   ).domain([min, max]).range([cfg.X1, cfg.X2])
-        cfg.rx = d3.scaleLinear(
+        cfg.rx = initScaleLinear(
                   ).domain([cfg.X1, cfg.X2]).range([min, max])
         cfg.sx = sc
         var x = min
@@ -300,9 +300,9 @@ proc xaxis_month_subtick(w: float): tuple[x: float, n: int] =  # {{{1
 
 
 iterator xaxis_month(min: float, max: float): tuple_xaxis =  # {{{1
-        var sc = d3.scaleLinear(
+        var sc = initScaleLinear(
                   ).domain([min, max]).range([cfg.X1, cfg.X2])
-        cfg.rx = d3.scaleLinear(
+        cfg.rx = initScaleLinear(
                   ).domain([cfg.X1, cfg.X2]).range([min, max])
         cfg.sx = sc
         var x = min
@@ -371,9 +371,9 @@ proc xaxis_quater_subtick(w: float): tuple[x: float, n: int] =  # {{{1
 
 
 iterator xaxis_quater(min: float, max: float): tuple_xaxis =  # {{{1
-        var sc = d3.scaleLinear(
+        var sc = initScaleLinear(
                   ).domain([min, max]).range([cfg.X1, cfg.X2])
-        cfg.rx = d3.scaleLinear(
+        cfg.rx = initScaleLinear(
                   ).domain([cfg.X1, cfg.X2]).range([min, max])
         cfg.sx = sc
         var x = min
@@ -640,14 +640,14 @@ proc on_csv(dat: seq[JsObject]): void =  # {{{1
         mi_index = 0
 
         # x domain, create x-axis ruler
-        var minx = d3.min(dat, mi_begin)
-        var maxx = d3.max(dat, mi_end)
+        var minx = min_from(dat, mi_begin)
+        var maxx = max_from(dat, mi_end)
         on_csv_xaxis(minx, maxx)
 
         # y domain
         var dom = [0.0, (cfg.Y2 - cfg.Y1) / 20.0]  # (float)len(dat)]
         var rng = [cfg.Y1, cfg.Y2]
-        var sy = d3.scaleLinear().domain(dom).range(rng)
+        var sy = initScaleLinear().domain(dom).range(rng)
         cfg.sy = sy
 
         # create y-axis ruler
@@ -676,6 +676,81 @@ proc on_csv(dat: seq[JsObject]): void =  # {{{1
 
         # all rects to draggable
         # var rects = SVG.select("rect").draggable()
+
+
+iterator ajax_text_split_cols(row: string): cstring =  # {{{1
+        var f_quote = false
+        var f_esc = false
+        var col = 0
+        var cell = ""
+        console.debug("row..." & row)
+        for c2 in row:
+            if f_quote:
+                if f_esc:
+                    f_esc = false
+                elif c2 == '\\':
+                    f_esc = true
+                    continue
+                elif c2 == '"':
+                    f_quote = false
+                cell &= c2
+                continue
+
+            if f_esc:
+                f_esc = false
+            elif c2 == '"':
+                f_quote = true
+                continue
+            elif c2 == '\\':
+                f_esc = true
+                continue
+            elif c2 == ',':
+                console.debug("cells..." & cell)
+                yield cell
+                col += 1
+                cell = ""
+                continue
+            cell &= c2
+        if len(cell) > 0:
+            console.debug("cells..." & cell)
+            yield cell
+
+
+proc ajax_text(data, textStatus: cstring, jqXHR: JsObject): void =  # {{{1
+        var f_first = true
+        var dat: seq[JsObject] = @[]
+        console.debug("ajax_text..." & data)
+        for row in splitLines($(data)):
+            console.debug("lines..." & $(len(dat)))
+            if f_first:
+                f_first = false
+                continue
+            var obj = newJsObject()
+            var col = 0
+            for cell in ajax_text_split_cols(row):
+                col += 1
+                case col
+                of 1:
+                    obj.group = cell
+                of 2:
+                    obj.file = cell
+                of 3:
+                    obj.idx = cell
+                of 4:
+                    obj.begin = cell
+                of 5:
+                    obj.fin = cell
+                of 6:
+                    obj.beginstr = cell
+                of 7:
+                    obj.endstr = cell
+                of 8:
+                    obj.text = cell
+                else:
+                    obj.misc = cell
+            if col >= 8:
+                dat.add(obj)
+        on_csv(dat)
 
 
 proc initMmItem(): MmItem =  # {{{1
@@ -860,7 +935,7 @@ proc on_init(ev: Event): void =  # {{{1
         discard mk.id("marker-2")
 
         # load csv...
-        var d3c = d3.csv("./gannt-d3.csv").then(on_csv)
+        discard jQuery.ajax("./gannt-d3.csv").then(ajax_text)
 
         # var svg = d3.select("svg")
         # d3c = svg.group
