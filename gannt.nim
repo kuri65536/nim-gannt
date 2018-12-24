@@ -25,10 +25,6 @@ import bars
 
 
 type
-  MM = ref object of RootObj  # {{{1
-    items: seq[MmItem]
-    target_item: MmItem
-
   tuple_xaxis = tuple[siz: int, nam: cstring, pos: int]  # {{{1
 
   fn_event = (proc(ev: Event) {.nimcall.})  # {{{1
@@ -41,58 +37,6 @@ var drag_mode = 0
 var drag_x = 0
 var drag_y = 0
 
-
-proc color(self: MmItem): cstring =
-    return "#00F"
-
-
-proc mi_begin2(self: JsObject): cstring =  # {{{1
-    var x = cfg.sx.to(self.mi_begin())
-    return $(x)
-
-proc mi_end(self: JsObject): float =  # {{{1
-    var item = (MmItem)self
-    if cfg.mode_from_dtstring:
-        var dt = times.parse($(item.endstr), $(cfg.fmt_dtstring))
-        debg("mi_end:dt:" & dt.format("yyyy-MM-dd"))
-        return dt.toTime().toSeconds()
-    return atof(item.fin)
-
-proc mi_end2(self: JsObject): cstring =  # {{{1
-    var x = cfg.sx.to(self.mi_end())
-    return $(x)
-
-proc mi_span(self: JsObject): cstring =  # {{{1
-    var ed = cfg.sx.to(self.mi_end())
-    var bg = cfg.sx.to(self.mi_begin())
-    debg("mi_span: " & $(bg) & "," & $(ed))
-    var ret = ed - bg
-    if ret < 1.0:
-        ret = 1.0
-    return $int(ret)
-
-proc mi_y(obj: JsObject): cstring =  # {{{1
-    var item = (MmItem)obj
-    var y = cfg.sy.to(item.idx)
-    return $(y)
-
-proc mi_height(dat: JsObject): cstring =  # {{{1
-        var item = (MmItem)dat
-        debg("mi_create: " & $(item.idx))
-        var n = item.idx
-        return $(cfg.sy.to(float(n + 1)) - cfg.sy.to(float(n)))
-
-
-proc mi_create(dat: JsObject): MmItem {.discardable.} =  # {{{1
-        var item = (MmItem)dat
-        mi_regist(item)
-        debg("mi_create: " & $(item.idx))
-        return item
-
-
-proc mi_xmlid(dat: JsObject): cstring =  # {{{1
-        var item = (MmItem)dat
-        return (cstring)("mmitem-" & $(item.idx))
 
 proc mi_select(src: cstring): cstring =  # {{{1
         var xmlid = cstring("")
@@ -635,7 +579,7 @@ proc create_title(g: SvgParent, r: SvgElement, t: cstring): void =  # {{{1
                 t.x(0).y(r.y)
 
 
-proc on_csv(dat: seq[JsObject]): void =  # {{{1
+proc on_csv(dat: seq[GntBar]): void =  # {{{1
         debg("inst:" & $(len(dat)))
         mi_index = 0
 
@@ -653,21 +597,12 @@ proc on_csv(dat: seq[JsObject]): void =  # {{{1
         # create y-axis ruler
         on_csv_yaxis(dom[0], dom[1], sy)
 
-        # create tile-stones
+        # create SVG elements
         for i in dat:
-            var mi = MmItem(i)
-            if mi.group != "1":
+            if i.group == "1":
+                i.regist_as_milestone()
                 continue
-            create_new_milestone(mi)
-
-        # create rectangles
-        for i in dat:
-            var mi = MmItem(i)
-            if mi.group == "1":
-                continue
-            var x1 = int(mi_begin(i))
-            var x2 = int(mi_end(i))
-            create_new_mmitem(x1, x2, -1, mi.text, mi.group)
+            i.regist_as_bar()
 
         SVG.select("rect.bars"
           ).event("beforedrag.mm", on_drag_before
@@ -678,85 +613,19 @@ proc on_csv(dat: seq[JsObject]): void =  # {{{1
         # var rects = SVG.select("rect").draggable()
 
 
-iterator ajax_text_split_cols(row: string): cstring =  # {{{1
-        var f_quote = false
-        var f_esc = false
-        var col = 0
-        var cell = ""
-        debg("row..." & row)
-        for c2 in row:
-            if f_quote:
-                if f_esc:
-                    f_esc = false
-                elif c2 == '\\':
-                    f_esc = true
-                    continue
-                elif c2 == '"':
-                    f_quote = false
-                cell &= c2
-                continue
-
-            if f_esc:
-                f_esc = false
-            elif c2 == '"':
-                f_quote = true
-                continue
-            elif c2 == '\\':
-                f_esc = true
-                continue
-            elif c2 == ',':
-                debg("cells..." & cell)
-                yield cell
-                col += 1
-                cell = ""
-                continue
-            cell &= c2
-        if len(cell) > 0:
-            debg("cells..." & cell)
-            yield cell
-
-
 proc ajax_text(data, textStatus: cstring, jqXHR: JsObject): void =  # {{{1
         var f_first = true
-        var dat: seq[JsObject] = @[]
+        var dat: seq[GntBar] = @[]
         debg("ajax_text..." & data)
         for row in splitLines($(data)):
             debg("lines..." & $(len(dat)))
             if f_first:
                 f_first = false
                 continue
-            var obj = newJsObject()
-            var col = 0
-            for cell in ajax_text_split_cols(row):
-                col += 1
-                case col
-                of 1:
-                    obj.group = cell
-                of 2:
-                    obj.file = cell
-                of 3:
-                    obj.idx = cell
-                of 4:
-                    obj.begin = cell
-                of 5:
-                    obj.fin = cell
-                of 6:
-                    obj.beginstr = cell
-                of 7:
-                    obj.endstr = cell
-                of 8:
-                    obj.text = cell
-                else:
-                    obj.misc = cell
-            if col >= 8:
+            var obj = newBar(row)
+            if obj != nil:
                 dat.add(obj)
         on_csv(dat)
-
-
-proc initMmItem(): MmItem =  # {{{1
-        result = MmItem(newJsObject())
-        mi_regist(result)
-        discard result.index()
 
 
 proc create_new_arrow_core(r1, r2: SvgRect): void =  # {{{1
@@ -781,9 +650,20 @@ proc create_new_bar(t1, t2: cstring): void =  # {{{1
             debg("new_bar: title text is not specified.")
             return
 
-        var s1 = int(cfg.rx.to((cfg.X2 + cfg.X1)/ 3))
-        var s2 = int(cfg.rx.to((cfg.X2 + cfg.X1) / 2))
-        create_new_mmitem(s1, s2, -1, t1, "2")
+        var x1 = int(cfg.rx.to((cfg.X2 + cfg.X1) / 3))
+        var x2 = int(cfg.rx.to((cfg.X2 + cfg.X1) / 2))
+        var d1 = times.getLocalTime(times.fromSeconds(x1))
+        var d2 = times.getLocalTime(times.fromSeconds(x2))
+
+        var bar = initGntBar()
+        bar.begin = float(x1)
+        bar.fin = float(x2)
+        bar.beginstr = d1.format("yyyy/MM/dd hh:mm:ss")
+        bar.endstr = d1.format("yyyy/MM/dd hh:mm:ss")
+        bar.idx = -1
+        bar.text = t1
+        bar.group = "2"
+        bar.regist_as_bar()
 
 
 proc create_new_text(t1, t2: cstring): void =  # {{{1

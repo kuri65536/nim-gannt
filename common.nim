@@ -61,23 +61,42 @@ proc to*(self: D3Scale, x: int): float =  # {{{1
     return self.to(float(x))
 
 
-proc min_from*(dat: seq[JsObject],
-               chooser: proc(src: JsObject): float): float =  # {{{1
-    var cur = Inf
-    for obj in dat:
-        var v = chooser(obj)
-        if v < cur:
-            cur = v
-    return cur
+iterator ajax_text_split_cols*(row: string): cstring =  # {{{1
+        var f_quote = false
+        var f_esc = false
+        var col = 0
+        var cell = ""
+        debg("row..." & row)
+        for c2 in row:
+            if f_quote:
+                if f_esc:
+                    f_esc = false
+                elif c2 == '\\':
+                    f_esc = true
+                    continue
+                elif c2 == '"':
+                    f_quote = false
+                cell &= c2
+                continue
 
+            if f_esc:
+                f_esc = false
+            elif c2 == '"':
+                f_quote = true
+                continue
+            elif c2 == '\\':
+                f_esc = true
+                continue
+            elif c2 == ',':
+                debg("cells..." & cell)
+                yield cell
+                col += 1
+                cell = ""
+                continue
+            cell &= c2
+        if len(cell) > 0:
+            debg("cells..." & cell)
+            yield cell
 
-proc max_from*(dat: seq[JsObject],
-               chooser: proc(src: JsObject): float): float =  # {{{1
-    var cur = NegInf
-    for obj in dat:
-        var v = chooser(obj)
-        if v > cur:
-            cur = v
-    return cur
 
 # vi: ft=nim:et:ts=4:sw=4:tw=80:nowrap:fdm=marker

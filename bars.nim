@@ -17,69 +17,107 @@ from config import cfg
 
 
 type
-  MmItem* = ref object of JsObject  # {{{1
+  GntBar* = ref object of RootObj  # {{{1
     group*: cstring
+    file*: cstring
     idx*: int
-    begin*: cstring
-    fin* {.importc: "end".} : cstring
+    begin*: float
+    fin*: float
     text*: cstring
     beginstr*: cstring
     endstr*: cstring
+    misc*: cstring
 
-  MmStone* = object of RootObj  # {{{1
+  GntStone* = object of RootObj  # {{{1
     idx: int
     at_or_on*: float
     title*: cstring
 
-var mi_items: seq[MmItem] = @[]
-var mi_stones: seq[MmStone] = @[]
+var gnt_bars: seq[GntBar] = @[]
+var mi_stones: seq[GntStone] = @[]
 
 
 proc atof*(src: cstring): float {.importc: "parseFloat" .}  # {{{1
 
 
-method index(self: MmItem): int {.base.} =  # {{{1
+method index(self: GntBar): int {.base.} =  # {{{1
     # TODO: why method?
     return self.idx
 
 
-proc mi_regist*(mi: MmItem): void =  # {{{1
-        mi_items.add(mi)
-        var n = 0
-        if len(mi_stones) > 0:
-            n = 1
-        mi.idx = n + len(mi_items) - 1
-        debg("mi_regist: " & $(len(mi_items)))
+proc mi_regist*(mi: GntBar): void =  # {{{1
+        gnt_bars.add(mi)
+        mi.idx = len(gnt_bars)  # idx=0 for milestones.
+        info("mi_regist: " & $(len(gnt_bars)))
 
 
 proc mi_len*(): int =  # {{{1
-        return len(mi_items)
+        return len(gnt_bars)
 
 
-proc mi_get*(n: int): MmItem =  # {{{1
-        return mi_items[n]
+proc mi_get*(n: int): GntBar =  # {{{1
+        return gnt_bars[n]
 
 
-proc mi_items_all*(): seq[MmItem] =  # {{{1
-        return mi_items
+proc mi_xmlid*(item: GntBar): cstring =  # {{{1
+        return (cstring)("mmitem-" & $(item.idx))
 
 
-proc mi_begin*(obj: JsObject): float =  # {{{1
-    var item = (MmItem)obj
+proc mi_items_all*(): seq[GntBar] =  # {{{1
+        return gnt_bars
+
+
+proc mi_begin*(item: GntBar): float =  # {{{1
     if cfg.mode_from_dtstring:
         var dt = times.parse($(item.beginstr), $(cfg.fmt_dtstring))
         debg("mi_begin:dt:" & dt.format("yyyy-MM-dd"))
         return dt.toTime().toSeconds()
-    return atof(item.begin)
+    return item.begin
 
 
-proc xmlid*(self: MmStone): cstring =  # {{{1
+proc mi_end*(item: GntBar): float =  # {{{1
+    if cfg.mode_from_dtstring:
+        var dt = times.parse($(item.endstr), $(cfg.fmt_dtstring))
+        debg("mi_end:dt:" & dt.format("yyyy-MM-dd"))
+        return dt.toTime().toSeconds()
+    return item.fin
+
+
+proc xmlid*(self: GntStone): cstring =  # {{{1
         return "stone-" & $(self.idx)
 
 
-proc initMmItem*(): MmItem =  # {{{1
-        result = MmItem(newJsObject())
-        mi_regist(result)
+proc initGntBar*(): GntBar =  # {{{1
+        result = new(GntBar)
+
+
+proc newBar*(row: string): GntBar =  # {{{1
+        var obj = new(GntBar)
+        var col = 0
+        for cell in ajax_text_split_cols(row):
+            col += 1
+            case col
+            of 1:
+                obj.group = cell
+            of 2:
+                obj.file = cell
+            of 3:
+                obj.idx = int(atof(cell))
+            of 4:
+                obj.begin = atof(cell)
+            of 5:
+                obj.fin = atof(cell)
+            of 6:
+                obj.beginstr = cell
+            of 7:
+                obj.endstr = cell
+            of 8:
+                obj.text = cell
+            else:
+                obj.misc = cell
+        if col >= 8:
+            return obj
+        return nil
 
 
 proc idx_to_xmlid(n: int): cstring =  # {{{1
@@ -97,8 +135,8 @@ proc create_title(g: SvgParent, r: SvgElement, t: cstring): void =  # {{{1
                 t.x(0).y(r.y)
 
 
-proc create_new_mmitem*(t1, t2, idx: int,  # {{{1
-                        text: cstring, cls: cstring): MmItem {.discardable.} =
+proc regist_as_bar*(mi: GntBar): GntBar {.discardable.} =
+        # create
         # <g>
         #   <rect> <text>
         # </g>
@@ -106,12 +144,11 @@ proc create_new_mmitem*(t1, t2, idx: int,  # {{{1
         # if len(t1) < 1:
         #     debg("new_bar: title text is not specified.")
         #     return
-        var mi = initMmItem()
-        mi.begin = $(t1)
-        mi.fin = $(t2)
-        mi.text = text
-        var newidx = mi.idx
-        if idx > 0:
+        mi.mi_regist()
+        var idx = mi.idx
+        var cls = mi.group
+        var text = mi.text
+        if idx < 0:
             # TODO: specified index => change order...?
             # mi.idx = idx
             # mi_items_reorder...
@@ -119,10 +156,12 @@ proc create_new_mmitem*(t1, t2, idx: int,  # {{{1
 
         var svg = SVG.select("svg").get(0).doc()
         var g = svg.group()
-        discard g.id(idx_to_xmlid(newidx))
+        discard g.id(idx_to_xmlid(idx))
 
-        var x1 = cfg.sx.to(float(t1))
-        var x2 = cfg.sx.to(float(t2))
+        var t1 = mi.mi_begin()
+        var t2 = mi.mi_end()
+        var x1 = cfg.sx.to(t1)
+        var x2 = cfg.sx.to(t2)
         var w = int(x2 - x1)
         if w < 1 and t1 < t2:
             w = 1
@@ -137,9 +176,9 @@ proc create_new_mmitem*(t1, t2, idx: int,  # {{{1
         create_title(g, rc, text)
 
 
-proc create_new_milestone*(mi: MmItem): MmStone {.discardable.} =  # {{{1
+proc regist_as_milestone*(mi: GntBar): GntStone {.discardable.} =  # {{{1
         # create object
-        var ret = MmStone()
+        var ret = GntStone()
         ret.title = mi.text
         ret.at_or_on = mi_begin(mi)
         mi_stones.add(ret)
@@ -157,6 +196,27 @@ proc create_new_milestone*(mi: MmItem): MmStone {.discardable.} =  # {{{1
         var mk = SvgMarker(SVG.select("#marker-2").get(0))
         discard p.marker("start", mk)
         return ret
+
+
+proc min_from*(dat: seq[GntBar],
+               chooser: proc(src: GntBar): float): float =  # {{{1
+    var cur = Inf
+    for obj in dat:
+        var v = chooser(obj)
+        if v < cur:
+            cur = v
+    return cur
+
+
+proc max_from*(dat: seq[GntBar],
+               chooser: proc(src: GntBar): float): float =  # {{{1
+    var cur = NegInf
+    for obj in dat:
+        var v = chooser(obj)
+        if v > cur:
+            cur = v
+    return cur
+
 
 # end of file {{{1
 # vi: ft=nim:et:ts=4:sw=4:tw=80:nowrap:fdm=marker
