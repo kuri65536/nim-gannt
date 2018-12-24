@@ -26,6 +26,7 @@ proc on*(jq: jQuerySelector, ev_name: cstring,
          cb: proc (ev: Event)): jQuerySelector {.discardable.}
 
 proc html*(jq: jQuerySelector): cstring
+proc text*(jq: jQuerySelector): cstring
 proc val*(jq: jQuerySelector): cstring
 proc val*(jq: jQuerySelector, newval: cstring): jQuerySelector
 proc attr*(jq: jQuerySelector, name: cstring, src: cstring): jQuerySelector

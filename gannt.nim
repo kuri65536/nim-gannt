@@ -922,12 +922,9 @@ proc on_init(ev: Event): void =  # {{{1
 
         # create styles
         # TODO: CDATA section
-        g.defs().element("style").words(
-            "    .xtick-sub2 {\n" &
-            "        stroke: #DDD;\n" &
-            "        stroke-width: 2;\n" &
-            "        stroke-opacity: 1.0;}\n" &
-            "")
+        var contents = jq("style:eq(1)").text()
+        jq("style:eq(1)").remove()
+        g.defs().element("style").words(contents)
 
         # create markers
         var mk = g.marker(10, 10, marker_arrow)

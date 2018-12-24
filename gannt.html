@@ -4,7 +4,6 @@
   <meta charset="utf-8" />
   <title>MindMap</title>
   <script src="jquery.js"> </script>
-  <script src="d3.js"> </script>
   <script src="svg.js"> </script>
   <script src="svg.draggable.js"> </script>
   <script src="nimcache/gannt.js"> </script>
@@ -33,6 +32,27 @@
         list-style: none;
     }
   --></style>
+  <!-- styles for SVG -->
+  <style>
+    .xtick-sub2 {
+        stroke: #DDD;
+        stroke-width: 2;
+        stroke-opacity: 1.0;
+     }
+    .bars {
+        stroke-width: 2;
+        stroke-opacity: 1.0;
+    }
+    .bar-1 { fill: #FAA; stroke: #F00; }
+    .bar-2 { fill: #AFA; stroke: #0F0; }
+    .bar-3 { fill: #AAF; stroke: #00F; }
+    .bar-4 { fill: #FFA; stroke: #FF0; }
+    .bar-5 { fill: #FAF; stroke: #F0F; }
+    .bar-6 { fill: #AFF; stroke: #0FF; }
+    .bar-7 { fill: #DAA; stroke: #D00; }
+    .bar-8 { fill: #ADA; stroke: #0D0; }
+    .bar-9 { fill: #AAD; stroke: #00D; }
+  </style>
 </head>
 <body>
   <svg id="root" width="1000" height="500">
