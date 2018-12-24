@@ -76,6 +76,7 @@ proc size*(svg: SvgText, siz: int): SvgText
 
 proc getBBox*(svg: SvgTargetOrg): SvgRect2
 
+proc off*(svg: SvgSet, name: cstring): SvgSet {.discardable.}
 
 # svg.draggable.js
 proc draggable*(tags: SvgSet): SvgSet {.discardable.}
@@ -83,6 +84,8 @@ proc draggable*(tags: SvgSet, constraint: JsObject): SvgSet {.discardable.}
 proc draggable*(tags: SvgSet,
                 cb: proc(el: Element, x, y: int, m: JsObject): JsObject
                 ): SvgSet {.discardable.}
+
+proc preventDefault*(ev: SvgEvent): void {.discardable.}  # {{{1
 
 {.pop.}
 

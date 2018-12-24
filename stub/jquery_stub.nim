@@ -23,7 +23,7 @@ type
 
 proc off*(jq: jQuerySelector, ev_name: cstring): jQuerySelector {.discardable.}
 proc on*(jq: jQuerySelector, ev_name: cstring,
-         cb: proc (ev: Event)): jQuerySelector {.discardable.}
+         cb: proc (ev: Event): bool): jQuerySelector {.discardable.}
 
 proc html*(jq: jQuerySelector): cstring
 proc text*(jq: jQuerySelector): cstring

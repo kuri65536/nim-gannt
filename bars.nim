@@ -60,7 +60,7 @@ proc mi_get*(n: int): GntBar =  # {{{1
 
 
 proc mi_xmlid*(item: GntBar): cstring =  # {{{1
-        return (cstring)("mmitem-" & $(item.idx))
+        return (cstring)("gntbar-" & $(item.idx))
 
 
 proc mi_items_all*(): seq[GntBar] =  # {{{1
@@ -87,7 +87,7 @@ proc xmlid*(self: GntStone): cstring =  # {{{1
         return "stone-" & $(self.idx)
 
 
-proc initGntBar*(): GntBar =  # {{{1
+proc initBar*(): GntBar =  # {{{1
         result = new(GntBar)
 
 
@@ -121,7 +121,7 @@ proc newBar*(row: string): GntBar =  # {{{1
 
 
 proc idx_to_xmlid(n: int): cstring =  # {{{1
-        return (cstring)("mmitem-" & $(n))
+        return (cstring)("gntbar-" & $(n))
 
 
 proc create_title(g: SvgParent, r: SvgElement, t: cstring): void =  # {{{1

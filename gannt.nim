@@ -24,10 +24,13 @@ from config import cfg
 import bars
 
 
+proc ev_bars(): void {.discardable.}
+
+
 type
   tuple_xaxis = tuple[siz: int, nam: cstring, pos: int]  # {{{1
 
-  fn_event = (proc(ev: Event) {.nimcall.})  # {{{1
+  fn_event = (proc(ev: Event): bool {.nimcall.})  # {{{1
   # - o .nimcall.
   # - x .closure.
 
@@ -54,6 +57,7 @@ proc mi_select(src: cstring): cstring =  # {{{1
                 return ""
             xmlid = src
         return xmlid
+
 
 proc xaxis_month_1st(x1: float, x2: float): cstring =  # {{{1
     if true:
@@ -141,6 +145,7 @@ iterator xaxis_day(min: float, max: float): tuple_xaxis =  # {{{1
             var tup: tuple_xaxis = (siz: 1, nam: name, pos: int(nx))
             yield tup
 
+
 proc week_search(x: int, dir: float): tuple[x: float, name: cstring] =  # {{{1
         var d = times.getLocalTime(times.fromSeconds((int64)x))
         d.second = 0
@@ -213,6 +218,7 @@ iterator xaxis_week(min: float, max: float): tuple_xaxis =  # {{{1
             var tup: tuple_xaxis = (siz: 1, nam: name, pos: int(nx))
             yield tup
 
+
 proc month_search(x: int, dir: float): tuple[x: float, name: cstring] =  # {{{1
         var d = times.getLocalTime(times.fromSeconds((int64)x))
         d.second = 0
@@ -278,6 +284,7 @@ iterator xaxis_month(min: float, max: float): tuple_xaxis =  # {{{1
                 px = cur.x
             var tup: tuple_xaxis = (siz: 1, nam: name, pos: int(nx))
             yield tup
+
 
 proc quater_search(x: int, dir: float): tuple[x: float, name: cstring] =  # {{{1
         var d = times.getLocalTime(times.fromSeconds((int64)x))
@@ -485,7 +492,6 @@ proc on_drag_before(ev: SvgEvent): bool =  # {{{1
             drag_mode = 0
 
 
-
 proc on_drag_finish(ev: SvgEvent): bool =  # {{{1
         var rc = SvgRect(SVG.select("#" & ev.originalTarget.id).get(0))
         var x = rc.x()
@@ -524,6 +530,49 @@ proc on_drag_finish(ev: SvgEvent): bool =  # {{{1
             debg("abc")
 
 
+proc on_cm_setup(ev: Event): (jQuerySelector, int, int) =  # {{{1
+        ev.preventDefault()
+        var x: int = ev.pageX
+        var y: int = ev.pageY
+        jq("#contextmenu").css("left", $(x - 10) & "px"
+                         ).css("top", $(y - 10) & "px"
+                         ).css("display", "block")
+        jq("#contextmenu li").remove()
+        return (jq("#contextmenu ul"), x, y)
+
+
+proc create_new_bar(t1, t2: cstring): void  # forward declaration {{{1
+
+
+proc on_cm_newbar(ev: Event): bool =  # {{{1
+        var t1 = jq("#new_text1").val()
+        var t2 = jq("#new_text2").val()
+        create_new_bar(t1, t2)
+        jq("#contextmenu").css("display", "none")
+        ev_bars()
+        return true
+
+
+proc on_cm_copybar(ev: Event): bool =  # {{{1
+        var TODO = 1
+        var t1 = jq("#new_text1").val()
+        var t2 = jq("#new_text2").val()
+        create_new_bar(t1, t2)
+        jq("#contextmenu").css("display", "none")
+        ev_bars()
+        return true
+
+
+proc on_cm_bars(ev: Event): bool =  # {{{1
+        var (ul, x, y) = on_cm_setup(ev)
+        ul.append("<li>" & "bar: ..." & "</li>")
+        ul.append("<li id=\"cm_copybar2\">copy bar</li>")
+        ul.append("<li id=\"cm_newbar2\">new bar</li>")
+        jq("#cm_copybar2").off("click").on("click", on_cm_copybar)
+        jq("#cm_newbar2").off("click").on("click", on_cm_newbar)
+        return false
+
+
 proc on_save_core(dat: cstring, ext: cstring): void =  # {{{1
         var anc = jq("<a style=\"display: none;\" />")
         var opt = newJsAssoc[string, string]()
@@ -544,12 +593,15 @@ proc on_save_core(dat: cstring, ext: cstring): void =  # {{{1
         # ls.mime = "data/quoted-printable"
         # Location.href = ls.addr
 
-proc on_save(ev: Event): void =  # {{{1
+
+proc on_save(ev: Event): bool =  # {{{1
         var dat = jq("#root").html()  # SVG
         dat = cstring("<svg>") & dat & cstring("</svg>")
         on_save_core(dat, "svg")
+        return true
 
-proc on_save_csv(ev: Event): void =  # {{{1
+
+proc on_save_csv(ev: Event): bool =  # {{{1
         const fmt = "yyyy/MM/dd hh:mm:ss"
         var dat: cstring = "prior,file,line,begin,end,beginstr,endstr,text\n"
         for i in mi_items_all():
@@ -563,6 +615,7 @@ proc on_save_csv(ev: Event): void =  # {{{1
             dat &= d1.format(fmt) & "," & d2.format(fmt) & "," & i.text
             dat &= "\n"
         on_save_core(dat, "csv")
+        return false
 
 
 proc create_title(g: SvgParent, r: SvgElement, t: cstring): void =  # {{{1
@@ -604,10 +657,15 @@ proc on_csv(dat: seq[GntBar]): void =  # {{{1
                 continue
             i.regist_as_bar()
 
+        ev_bars()
+
+
+proc ev_bars(): void =  # {{{1
         SVG.select("rect.bars"
-          ).event("beforedrag.mm", on_drag_before
-          ).event("dragend.mm", on_drag_finish
+          ).off("beforedrag.mm").event("beforedrag.mm", on_drag_before
+          ).off("dragend.mm").event("dragend.mm", on_drag_finish
           ).draggable(on_drag_limit_y)
+        jq("rect.bars").off("contextmenu.mm").on("contextmenu.mm", on_cm_bars)
 
         # all rects to draggable
         # var rects = SVG.select("rect").draggable()
@@ -655,11 +713,11 @@ proc create_new_bar(t1, t2: cstring): void =  # {{{1
         var d1 = times.getLocalTime(times.fromSeconds(x1))
         var d2 = times.getLocalTime(times.fromSeconds(x2))
 
-        var bar = initGntBar()
+        var bar = initBar()
         bar.begin = float(x1)
         bar.fin = float(x2)
         bar.beginstr = d1.format("yyyy/MM/dd hh:mm:ss")
-        bar.endstr = d1.format("yyyy/MM/dd hh:mm:ss")
+        bar.endstr = d2.format("yyyy/MM/dd hh:mm:ss")
         bar.idx = -1
         bar.text = t1
         bar.group = "2"
@@ -699,7 +757,7 @@ proc create_new_arrow(t1, t2: cstring): void =  # {{{1
         create_new_arrow_core(SvgRect(r1.get(0)), SvgRect(r2.get(0)))
 
 
-proc on_new_object(ev: Event): void =  # {{{1
+proc on_new_object(ev: Event): bool =  # {{{1
         var sel = $(jq("#new_object").val())  # jq(ev).target()
         var t1 = jq("#new_text1").val()
         var t2 = jq("#new_text2").val()
@@ -714,21 +772,22 @@ proc on_new_object(ev: Event): void =  # {{{1
         else:
             sel = ""
         discard jq("#new_object").val("0")
+        return true
 
 
-proc on_refresh(ev: Event): void =  # {{{1
+proc on_refresh(ev: Event): bool =  # {{{1
         var loc = window.location
         var url = loc.protocol & cstring("//") & loc.host & loc.pathname
         var xrange = jq("#xrange").val()
         var title = jq("#title").val()
         window.location.href = url & "?xrange=" & xrange & "&title=" & title
+        return true
 
 
-proc on_cm_focus(ev: Event) =  # {{{1
+proc on_cm_focus(ev: Event): bool =  # {{{1
         debg("on_cm_focus")
+        return true
 
-proc on_cm_newbar(ev: Event) =  # {{{1
-        debg("on_cm_newbar")
 
 iterator cm_menuitems_at(x, y: int  # {{{1
                          ): tuple[id, text: string, callback: fn_event] =
@@ -755,25 +814,21 @@ iterator cm_menuitems_at(x, y: int  # {{{1
         else:
             yield (id: "cm_newbar", text: "Create bar", callback: on_cm_newbar)
 
-proc on_contextmenu(ev: Event): void =  # {{{1
-        ev.preventDefault()
-        var x: int = ev.pageX
-        var y: int = ev.pageY
-        jq("#contextmenu").css("left", $(x - 10) & "px"
-                         ).css("top", $(y - 10) & "px"
-                         ).css("display", "block")
-        jq("#contextmenu li").remove()
-        var ul = jq("#contextmenu ul")
+
+proc on_contextmenu(ev: Event): bool =  # {{{1
+        var (ul, x, y) = on_cm_setup(ev)
         for tup in cm_menuitems_at(x, y):
             # fetch menu on svg item...
             # display menu...
             # enable click events...
             ul.append("<li id=\"" & tup.id & "\">" & tup.text & "</li>")
             jq("#" & tup.id).off("click").on("click", tup.callback)
+        return false
 
 
-proc on_cm_leave(ev: Event): void =  # {{{1
+proc on_cm_leave(ev: Event): bool =  # {{{1
         jq("#contextmenu").css("display", "none")
+        return false
 
 
 proc on_init(ev: Event): void =  # {{{1
@@ -788,14 +843,14 @@ proc on_init(ev: Event): void =  # {{{1
         if title != nil:
             cfg.mode_title = int(atof(title))
 
-        jq(document).off("contextmenu").on("contextmenu", on_contextmenu)
+        jq("svg").off("contextmenu").on("contextmenu", on_contextmenu)
         jq("#xrange").off("change").on("change", on_refresh)
         jq("#title").off("change").on("change", on_refresh)
         jq("#new_object").off("change").on("change", on_new_object)
         jq("#save").off("click").on("click", on_save)
         jq("#save_csv").off("click").on("click", on_save_csv)
         jq("#refresh").off("click").on("click", on_refresh)
-        jq("#contextmenu").off("mouseout").on("mouseout", on_cm_leave)
+        jq("#contextmenu").off("mouseleave").on("mouseleave", on_cm_leave)
         # jq("#contextmenu").off("onblur").on("onblur", on_cm_leave)
 
         var g = SVG.select("svg").get(0).doc()
