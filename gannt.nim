@@ -684,6 +684,8 @@ proc ajax_text(data, textStatus: cstring, jqXHR: JsObject): void =  # {{{1
             if obj != nil:
                 dat.add(obj)
         on_csv(dat)
+        # remove the invalid SVG element by svg.js-2.7.0
+        jq("svg:eq(1)").remove()
 
 
 proc create_new_arrow_core(r1, r2: SvgRect): void =  # {{{1
