@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 import times
+import strutils
 
 import jsffi
 
@@ -59,7 +60,7 @@ proc mi_get*(n: int): GntBar =  # {{{1
         return gnt_bars[n]
 
 
-proc mi_xmlid*(item: GntBar): cstring =  # {{{1
+proc xmlid*(item: GntBar): cstring =  # {{{1
         return (cstring)("gntbar-" & $(item.idx))
 
 
@@ -81,6 +82,17 @@ proc mi_end*(item: GntBar): float =  # {{{1
         debg("mi_end:dt:" & dt.format("yyyy-MM-dd"))
         return dt.toTime().toSeconds()
     return item.fin
+
+
+proc format*(self: GntBar): cstring =  # {{{1
+    var dat = self.group
+    dat &= ",sample.txt,"
+    dat &= $(self.idx) & ","
+    dat &= int(self.begin).intToStr(9) & ","
+    dat &= int(self.fin).intToStr(9) & ","
+    dat &= self.beginstr & "," & self.endstr & "," & self.text
+    dat &= "\n"
+    return dat
 
 
 proc xmlid*(self: GntStone): cstring =  # {{{1

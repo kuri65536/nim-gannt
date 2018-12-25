@@ -24,6 +24,8 @@ from config import cfg
 import bars
 
 
+# forward declaration {{{1
+proc create_new_bar(t1, t2: cstring): void
 proc ev_bars(): void {.discardable.}
 
 
@@ -48,7 +50,7 @@ proc mi_select(src: cstring): cstring =  # {{{1
             if n >= mi_len():
                 return ""
             var mi = mi_get(n)
-            xmlid = mi.mi_xmlid()
+            xmlid = mi.xmlid()
         else:
             # test with jQuery, so SVG selector raise exception
             # if src is not valid XML id string.
@@ -541,9 +543,6 @@ proc on_cm_setup(ev: Event): (jQuerySelector, int, int) =  # {{{1
         return (jq("#contextmenu ul"), x, y)
 
 
-proc create_new_bar(t1, t2: cstring): void  # forward declaration {{{1
-
-
 proc on_cm_newbar(ev: Event): bool =  # {{{1
         var t1 = jq("#new_text1").val()
         var t2 = jq("#new_text2").val()
@@ -603,17 +602,18 @@ proc on_save(ev: Event): bool =  # {{{1
 
 proc on_save_csv(ev: Event): bool =  # {{{1
         const fmt = "yyyy/MM/dd hh:mm:ss"
-        var dat: cstring = "prior,file,line,begin,end,beginstr,endstr,text\n"
+        var dat: cstring = "group,file,idx,begin,end,beginstr,endstr,text\n"
         for i in mi_items_all():
-            var r = SVG.select("rect#" & mi_xmlid(i)).get(0)
+            var r = SVG.select("#" & i.xmlid() & " rect").get(0)
             var x1 = cfg.rx.to(r.x)
             var x2 = cfg.rx.to(r.x + SvgRect(r).width())
             var d1 = times.getLocalTime(times.fromSeconds(x1))
             var d2 = times.getLocalTime(times.fromSeconds(x2))
-            dat &= "1,sample.txt,  1," & int(x1).intToStr(9) & ","
-            dat &= int(x2).intToStr(9) & ","
-            dat &= d1.format(fmt) & "," & d2.format(fmt) & "," & i.text
-            dat &= "\n"
+            i.begin = x1
+            i.fin = x2
+            i.beginstr = d1.format(fmt)
+            i.endstr = d2.format(fmt)
+            dat &= i.format()
         on_save_core(dat, "csv")
         return false
 
