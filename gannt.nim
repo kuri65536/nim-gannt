@@ -870,7 +870,7 @@ proc on_init(ev: Event): void =  # {{{1
         discard mk.id("marker-2")
 
         # load csv...
-        discard jQuery.ajax("./gannt-d3.csv").then(ajax_text)
+        discard jQuery.ajax("./sample.csv").then(ajax_text)
 
         # var svg = d3.select("svg")
         # d3c = svg.group
