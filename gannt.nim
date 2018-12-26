@@ -813,11 +813,10 @@ proc on_new_object(ev: Event): bool =  # {{{1
 
 
 proc on_refresh(ev: Event): bool =  # {{{1
-        var loc = window.location
-        var url = loc.protocol & cstring("//") & loc.host & loc.pathname
-        var xrange = jq("#xrange").val()
-        var title = jq("#title").val()
-        window.location.href = url & "?xrange=" & xrange & "&title=" & title
+        cfg.mode_xrange = int(atof(jq("#xrange").val()))
+        cfg.mode_title = int(atof(jq("#title").val()))
+        var data = mi_items_all()
+        on_csv(data)
         return true
 
 
