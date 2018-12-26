@@ -67,6 +67,8 @@ proc y*(svg: SvgElement, y: int): SvgElement {.discardable.}
 proc x*(svg: SvgElement): int
 proc y*(svg: SvgElement): int
 # proc getBBox*(svg: SvgElement): SvgRect2
+proc clear*(svg: SvgElement): SvgElement {.discardable.}
+
 proc width*(svg: SvgRect): int
 proc width*(svg: SvgRect, w: int): SvgRect {.discardable.}
 proc height*(svg: SvgRect): int

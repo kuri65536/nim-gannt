@@ -37,7 +37,6 @@ type
   # - x .closure.
 
 # {{{1
-var mi_index = 0
 var drag_mode = 0
 var drag_x = 0
 var drag_y = 0
@@ -632,9 +631,31 @@ proc create_title(g: SvgParent, r: SvgElement, t: cstring): void =  # {{{1
                 t.x(0).y(r.y)
 
 
+proc clear_svg(): void =  # {{{1
+        var style_tag = jq("style:eq(1)")  # can get style both in head or svg
+        var contents = style_tag.text()
+        style_tag.remove()
+
+        mi_items_clear()
+        var svg_tag = SVG.select("svg").get(0)
+        svg_tag.clear()
+
+        var g = svg_tag.doc()
+
+        # create styles
+        # TODO: CDATA section
+        g.defs().element("style").words(contents)
+
+        # create markers
+        var mk = g.marker(10, 10, marker_arrow)
+        discard mk.id("marker-1")
+        mk = g.marker(10, 10, marker_milestone)
+        discard mk.id("marker-2")
+
+
 proc on_csv(dat: seq[GntBar]): void =  # {{{1
         debg("inst:" & $(len(dat)))
-        mi_index = 0
+        clear_svg()
 
         # x domain, create x-axis ruler
         var minx = min_from(dat, mi_begin)
@@ -744,7 +765,7 @@ proc create_new_text(t1, t2: cstring): void =  # {{{1
         if len(t1) < 1:
             debg("new_txt: title text is not specified.")
             return
-        var y = int(cfg.sy.to(mi_index))
+        var y = int(cfg.sy.to(mi_len()))
         if len(t2) > 0:
             y = int(atof(t2))
         var svg = SVG.select("svg").get(0).doc()
@@ -869,20 +890,6 @@ proc on_init(ev: Event): void =  # {{{1
         jq("#refresh").off("click").on("click", on_refresh)
         jq("#contextmenu").off("mouseleave").on("mouseleave", on_cm_leave)
         # jq("#contextmenu").off("onblur").on("onblur", on_cm_leave)
-
-        var g = SVG.select("svg").get(0).doc()
-
-        # create styles
-        # TODO: CDATA section
-        var contents = jq("style:eq(1)").text()
-        jq("style:eq(1)").remove()
-        g.defs().element("style").words(contents)
-
-        # create markers
-        var mk = g.marker(10, 10, marker_arrow)
-        discard mk.id("marker-1")
-        mk = g.marker(10, 10, marker_milestone)
-        discard mk.id("marker-2")
 
         # load csv...
         var fname = url.searchParams.get("file")

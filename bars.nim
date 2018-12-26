@@ -68,6 +68,10 @@ proc mi_items_all*(): seq[GntBar] =  # {{{1
         return gnt_bars
 
 
+proc mi_items_clear*(): void =  # {{{1
+        gnt_bars = @[]
+
+
 proc mi_begin*(item: GntBar): float =  # {{{1
     if cfg.mode_from_dtstring:
         var dt = times.parse($(item.beginstr), $(cfg.fmt_dtstring))
