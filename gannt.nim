@@ -688,6 +688,20 @@ proc ajax_text(data, textStatus: cstring, jqXHR: JsObject): void =  # {{{1
         jq("svg:eq(1)").remove()
 
 
+proc upload_csv(ev: Event): bool =  # {{{1
+        var data = event_filereader_result(ev)
+        ajax_text(data, "", nil)
+
+
+proc on_upload_csv(ev: Event): bool =  # {{{1
+        var files = element_input_files(jq("#upload_file")[0])
+        var fileData = files[0]
+        var fr = newFileReader()
+        fr.onload = upload_csv
+        fr.readAsText(fileData)  # launch upload
+        return false
+
+
 proc create_new_arrow_core(r1, r2: SvgRect): void =  # {{{1
         var x1 = int(r1.x() + r1.width())
         var x2 = int(r2.x())
@@ -851,6 +865,7 @@ proc on_init(ev: Event): void =  # {{{1
         jq("#new_object").off("change").on("change", on_new_object)
         jq("#save").off("click").on("click", on_save)
         jq("#save_csv").off("click").on("click", on_save_csv)
+        jq("#upload").off("click").on("click", on_upload_csv)
         jq("#refresh").off("click").on("click", on_refresh)
         jq("#contextmenu").off("mouseleave").on("mouseleave", on_cm_leave)
         # jq("#contextmenu").off("onblur").on("onblur", on_cm_leave)
@@ -870,11 +885,9 @@ proc on_init(ev: Event): void =  # {{{1
         discard mk.id("marker-2")
 
         # load csv...
-        discard jQuery.ajax("./sample.csv").then(ajax_text)
-
-        # var svg = d3.select("svg")
-        # d3c = svg.group
-        #         ).attr("class", "x axis")
+        var fname = url.searchParams.get("file")
+        if fname != nil:
+            discard jQuery.ajax(fname).then(ajax_text)
 
 # main {{{1
 var pm = jQuery.jqwhen(jQuery.ready).then(on_init)

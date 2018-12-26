@@ -18,6 +18,13 @@ type
 
   JsPromise* = ref object of RootObj
 
+  JsFile* {.importc: "File".} = ref object of RootObj
+  FileList* = seq[JsFile]
+
+  FileReader* = ref object of JsObject
+    result_data* {.importc: "result".}: cstring
+    onload*: proc(ev: Event): bool
+
 
 proc newBlob*(ary: array[0..0, cstring],
               opt: JsAssoc): Blob {. importcpp: "new Blob(@)" .}
@@ -38,5 +45,15 @@ proc then*(self: JsPromise,
            cb: proc (data, textStatus: cstring, jqXHR: JsObject)): JsPromise
 # proc error*(self: JsPromise, cb: proc ()): JsPromise
 
+proc readAsText(src: JsFile): void
+
 {.pop.}
 
+proc newFileReader*(): FileReader {.importc: "new FileReader".}
+
+proc event_filereader_result*(
+        ev: Event): cstring {.importcpp: "@.target.result".}
+proc element_input_files*(
+        el: Element): FileList {.importcpp: "@.files".}
+
+# vi: ft=nim:ts=4:sw=4:tw=80:nowrap:fdm=marker

@@ -30,7 +30,7 @@ endif
 build: .download nimcache/gannt.js
 
 launch: nimcache/gannt.js .download
-	$(browse) http://localhost:8000/gannt.html
+	$(browse) http://localhost:8000/gannt.html?file=./sample.csv
 	$(server)
 
 nimcache/gannt.js: *.nim stub/*.nim

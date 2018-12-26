@@ -1,6 +1,12 @@
 Simple Gannt chart tool by nim
 ====================================
 
+Prerequirement
+---------------------
+- browser: tested with Firefox 64.0
+- optional: python3 for serving the files.
+
+
 Installation
 ---------------------
 open the gannt.html from a your web-browser.
@@ -8,6 +14,8 @@ open the gannt.html from a your web-browser.
 then upload `sample.csv` from `upload` button.
 
 ### server mode
+In server mode, `sample.csv` will be send automatically
+and gannt chart show up immidiately.
 
 ```shell
 $ make download
