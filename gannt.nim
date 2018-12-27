@@ -599,10 +599,10 @@ proc on_save(ev: Event): bool =  # {{{1
         return true
 
 
-proc on_save_csv(ev: Event): bool =  # {{{1
+proc update_bars_from_svg(): seq[GntBar] =  # {{{1
         const fmt = "yyyy/MM/dd hh:mm:ss"
-        var dat: cstring = "group,file,idx,begin,end,beginstr,endstr,text\n"
-        for i in mi_items_all():
+        var data = bars_get_all_seq()
+        for i in data:
             var r = SVG.select("#" & i.xmlid() & " rect").get(0)
             var x1 = cfg.rx.to(r.x)
             var x2 = cfg.rx.to(r.x + SvgRect(r).width())
@@ -612,6 +612,12 @@ proc on_save_csv(ev: Event): bool =  # {{{1
             i.fin = x2
             i.beginstr = d1.format(fmt)
             i.endstr = d2.format(fmt)
+        return data
+
+
+proc on_save_csv(ev: Event): bool =  # {{{1
+        var dat: cstring = "group,file,idx,begin,end,beginstr,endstr,text\n"
+        for i in update_bars_from_svg():
             dat &= i.format()
         on_save_core(dat, "csv")
         return false
@@ -815,7 +821,7 @@ proc on_new_object(ev: Event): bool =  # {{{1
 proc on_refresh(ev: Event): bool =  # {{{1
         cfg.mode_xrange = int(atof(jq("#xrange").val()))
         cfg.mode_title = int(atof(jq("#title").val()))
-        var data = mi_items_all()
+        var data = update_bars_from_svg()
         on_csv(data)
         return true
 

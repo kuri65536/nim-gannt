@@ -64,7 +64,7 @@ proc xmlid*(item: GntBar): cstring =  # {{{1
         return (cstring)("gntbar-" & $(item.idx))
 
 
-proc mi_items_all*(): seq[GntBar] =  # {{{1
+proc bars_get_all_seq*(): seq[GntBar] =  # {{{1
         return gnt_bars
 
 
