@@ -440,17 +440,17 @@ proc on_csv_xaxis(min: float, max: float): void =  # {{{1
             if tup.siz == 1:
                 var y1 = 0
                 if len(tup.nam) < 1:
-                    y1 = 14
+                    y1 = cfg.H5
                 g.line(px, y1, px, int(cfg.Y1)).id("t1-" & ns).cls("xtick1")
                 g.line(px, int(cfg.Y1), px, int(cfg.Y2)
                 ).id("t2-" & ns).cls("xtick2")
             if tup.siz == 2:
-                g.line(px, 20, px, int(cfg.Y1)).id("s1-" & $(n)
+                g.line(px, cfg.H6, px, int(cfg.Y1)).id("s1-" & $(n)
                 ).cls("xtick-sub1")
                 gs.line(px, int(cfg.Y1) + 1, px, int(cfg.Y2)
                  ).id("s2-" & $(n)).cls("xtick-sub2")
             if len(tup.nam) > 0:
-                discard gt.text(tup.nam).size(10).x(px + 2).y(0)
+                discard gt.text(tup.nam).size(cfg.S1).x(px + 2).y(0)
         g.stroke("#000", 2, 1.0).id("xtics")
         gs.id("xtics-sub")
         ga.id("xaxis")
@@ -663,7 +663,7 @@ proc on_csv(dat: seq[GntBar]): void =  # {{{1
         on_csv_xaxis(minx, maxx)
 
         # y domain
-        var dom = [0.0, (cfg.Y2 - cfg.Y1) / 20.0]  # (float)len(dat)]
+        var dom = [0.0, (cfg.Y2 - cfg.Y1) / cfg.H1]  # (float)len(dat)]
         var rng = [cfg.Y1, cfg.Y2]
         var sy = initScaleLinear().domain(dom).range(rng)
         cfg.sy = sy

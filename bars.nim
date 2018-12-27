@@ -183,10 +183,10 @@ proc regist_as_bar*(mi: GntBar): GntBar {.discardable.} =
             w = 1
         var y1 = cfg.sy.to(mi.idx)
         var y2 = cfg.sy.to(mi.idx + 1)
-        var rc = g.rect(w, int(y2 - y1) - 4)
-        rc.radius(2
+        var rc = g.rect(w, int(y2 - y1) - 2 * cfg.H2)
+        rc.radius(cfg.H3
          ).x(int(x1)
-         ).y(int(y1) + 2
+         ).y(int(y1) + cfg.H2
          ).cls("bars bar-" & cls)
 
         create_title(g, rc, text)
@@ -207,8 +207,8 @@ proc regist_as_milestone*(mi: GntBar): GntStone {.discardable.} =  # {{{1
         var x = int(cfg.sx.to(ret.at_or_on))
         var y = int(cfg.sy.to(0))
         var t = g.text(ret.title)
-        t.x(x + 10).y(y)
-        var p = g.path("M" & $(x) & " " & $(y + 10))
+        t.x(x + cfg.W1).y(y)
+        var p = g.path("M" & $(x) & " " & $(y + cfg.H4))
         var mk = SvgMarker(SVG.select("#marker-2").get(0))
         discard p.marker("start", mk)
         return ret

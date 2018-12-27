@@ -1,6 +1,5 @@
 group,file,idx,begin,end,beginstr,endstr,text
 7,sample.txt, 38,1449281853,1451500939,2018/12/17 06-41-34,2018/12/17 17-30-00,select the range of sub-ticks
-8,sample.txt, 38,1449281853,1451500939,2018/12/17 06-41-34,2018/12/17 17-30-00,remove hard-code of bar height
 8,sample.txt, 38,1449281853,1451500939,2018/12/21 09-00-28,2018/12/21 17-30-00,drag) show extending bars
 3,sample.txt, 38,1449281853,1451500939,2018/12/24 16-56-42,2018/12/25 17-30-32,change bar order
 3,sample.txt, 38,1449281853,1451500939,2018/12/24 17-43-46,2018/12/25 17-30-32,copy bar
