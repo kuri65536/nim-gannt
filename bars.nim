@@ -49,7 +49,7 @@ method index(self: GntBar): int {.base.} =  # {{{1
 proc mi_regist*(mi: GntBar): void =  # {{{1
         gnt_bars.add(mi)
         mi.idx = len(gnt_bars)  # idx=0 for milestones.
-        info("mi_regist: " & $(len(gnt_bars)))
+        debg("mi_regist: " & $(len(gnt_bars)))
 
 
 proc mi_len*(): int =  # {{{1
@@ -179,7 +179,7 @@ proc regist_as_bar*(mi: GntBar): GntBar {.discardable.} =
         var x1 = cfg.sx.to(t1)
         var x2 = cfg.sx.to(t2)
         var w = int(x2 - x1)
-        if w < 1 and t1 < t2:
+        if w < 1:
             w = 1
         var y1 = cfg.sy.to(mi.idx)
         var y2 = cfg.sy.to(mi.idx + 1)

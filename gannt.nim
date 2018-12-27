@@ -190,6 +190,8 @@ iterator xaxis_week(min: float, max: float): tuple_xaxis =  # {{{1
         cfg.rx = initScaleLinear(
                   ).domain([cfg.X1, cfg.X2]).range([min, max])
         cfg.sx = sc
+        warn("xaxis_week: " & $(min) & " to " & $(max))
+        warn("xaxis_week: sx to " & $(sc.to(7 * 24 * 60 * 60)))
         var x = min
         var d1pct = (max - min) * 0.01
         var cur = week_search(int(x), -0.1)
@@ -600,18 +602,21 @@ proc on_save(ev: Event): bool =  # {{{1
 
 
 proc update_bars_from_svg(): seq[GntBar] =  # {{{1
-        const fmt = "yyyy/MM/dd hh:mm:ss"
+        const fmt = "yyyy/MM/dd HH:mm:ss"
         var data = bars_get_all_seq()
         for i in data:
             var r = SVG.select("#" & i.xmlid() & " rect").get(0)
+            debg("update rect: " & $(r.x) & "," & $(SvgRect(r).width()))
             var x1 = cfg.rx.to(r.x)
             var x2 = cfg.rx.to(r.x + SvgRect(r).width())
+            debg("update rect: " & $(x1) & "," & $(x2))
             var d1 = times.getLocalTime(times.fromSeconds(x1))
             var d2 = times.getLocalTime(times.fromSeconds(x2))
             i.begin = x1
             i.fin = x2
             i.beginstr = d1.format(fmt)
             i.endstr = d2.format(fmt)
+            info("update rect: " & i.beginstr & "," & i.endstr)
         return data
 
 
