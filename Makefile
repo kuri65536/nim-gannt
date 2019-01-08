@@ -53,9 +53,13 @@ download: .download
 	wget http://code.jquery.com/$(jquery) -O jquery.js
 	touch .download
 
+ver:=$(shell git tag | grep v.* | sort | tail -n1)
+hash:=$(shell git log -n1 --pretty=%h)
+
+src_deploy:=*.nim stub Makefile README.md
 deploy:
-	zip -gur nim-gannt.zip *.nim stub
+	zip -gur nim-gannt-$(ver)-$(hash).zip $(src_deploy)
 
 deploy_full:
-	zip -gur nim-gannt.zip .git *.nim stub
+	zip -gur nim-gannt-$(ver)-$(hash).zip .git $(src_deploy)
 
