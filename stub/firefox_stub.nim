@@ -56,4 +56,6 @@ proc event_filereader_result*(
 proc element_input_files*(
         el: Element): FileList {.importcpp: "@.files".}
 
+proc id*(src: Node): cstring {.importcpp: "@.id".}
+
 # vi: ft=nim:ts=4:sw=4:tw=80:nowrap:fdm=marker

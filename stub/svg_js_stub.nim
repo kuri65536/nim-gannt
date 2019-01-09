@@ -56,6 +56,7 @@ proc marker*(svg: SvgParent, vx: int, vy: int,
 proc marker*(svg: SvgElement,
              pos: cstring, mk: SvgMarker): SvgElement {.discardable.}
 
+proc parent*(svg: SvgElement): SvgElement {.discardable.}
 proc id*(svg: SvgElement, src: cstring): SvgElement {.discardable.}
 proc id*(svg: SvgElement): cstring
 proc attr*(svg: SvgElement, name, value: cstring): SvgElement
@@ -105,6 +106,8 @@ proc cls*(svg: SvgElement,
 proc event*(svg: SvgSet, name: cstring,
             cb: proc(ev: SvgEvent): bool): SvgSet {.
               importcpp: "on", discardable.}
+
+proc svg_from_node*(el: Node): SvgElement {.importcpp: "#".}
 
 var SVG* {.importc, nodecl.}: SvgJs
 

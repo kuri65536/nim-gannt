@@ -9,6 +9,7 @@ import strutils
 
 import jsffi
 
+import jquery_stub
 import svg_js_stub
 
 # own libraries.
@@ -99,6 +100,22 @@ proc format*(self: GntBar): cstring =  # {{{1
     return dat
 
 
+proc fetch_from_rect*(self: GntBar,  # {{{1
+                      r: SvgRect): GntBar {.discardable.} =
+    const fmt = "yyyy/MM/dd HH:mm:ss"
+    debg("update rect: " & $(r.x) & "," & $(r.width()))
+    var x1 = cfg.rx.to(r.x)
+    var x2 = cfg.rx.to(r.x + r.width())
+    debg("update rect: " & $(x1) & "," & $(x2))
+    var d1 = times.getLocalTime(times.fromSeconds(x1))
+    var d2 = times.getLocalTime(times.fromSeconds(x2))
+    self.begin = x1
+    self.fin = x2
+    self.beginstr = d1.format(fmt)
+    self.endstr = d2.format(fmt)
+    return self
+
+
 proc xmlid*(self: GntStone): cstring =  # {{{1
         return "stone-" & $(self.idx)
 
@@ -134,6 +151,27 @@ proc newBar*(row: string): GntBar =  # {{{1
         if col >= 8:
             return obj
         return nil
+
+
+proc copyBar*(id: cstring): GntBar =  # {{{1
+        var obj = new(GntBar)
+
+        var cname = $(jq("#" & id & " rect").attr("class"))
+        var name: cstring = ""
+        for i in split(cname):
+            if not i.startsWith("bar-"):
+                continue
+            # name = substr(i, 4, len(i) - 1)  # same as bellow.
+            name = i[4 .. ^1]
+
+        obj.file = "gui"
+        obj.group = name
+        obj.text = jq("#" & id & " text").text()
+        obj.idx = 0
+
+        var rc = SVG.select("#" & id & " rect").get(0)
+        obj.fetch_from_rect(SvgRect(rc))
+        return obj
 
 
 proc idx_to_xmlid(n: int): cstring =  # {{{1

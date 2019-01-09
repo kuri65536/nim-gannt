@@ -27,6 +27,7 @@ proc on*(jq: jQuerySelector, ev_name: cstring,
 
 proc html*(jq: jQuerySelector): cstring
 proc text*(jq: jQuerySelector): cstring
+proc attr*(jq: jQuerySelector, name: cstring): cstring
 proc val*(jq: jQuerySelector): cstring
 proc val*(jq: jQuerySelector, newval: cstring): jQuerySelector
 proc attr*(jq: jQuerySelector, name: cstring, src: cstring): jQuerySelector
@@ -44,6 +45,8 @@ proc `[]`*(jq: jQuerySelector, i: int): Element {.importcpp: "#[#]" .}
 
 proc jq*(doc: Document): jQuerySelector {.importc: "jQuery", nodecl.}
 proc jq*(selector: cstring): jQuerySelector {.importc: "jQuery", nodecl.}
+proc jq*(selector: cstring,
+         sel: Node): jQuerySelector {.importc: "jQuery", nodecl.}
 
 proc jqwhen*(jq: JQuery, src: cstring): JsPromise
     {.importcpp: "when" .}

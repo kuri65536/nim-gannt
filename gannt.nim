@@ -554,18 +554,21 @@ proc on_cm_newbar(ev: Event): bool =  # {{{1
 
 
 proc on_cm_copybar(ev: Event): bool =  # {{{1
-        var TODO = 1
-        var t1 = jq("#new_text1").val()
-        var t2 = jq("#new_text2").val()
-        create_new_bar(t1, t2)
+        var li = jq("li:first", ev.target.parentNode)
+        var id = li.text()
+        var bar = copyBar(id)
+        regist_as_bar(bar)
         jq("#contextmenu").css("display", "none")
         ev_bars()
         return true
 
 
 proc on_cm_bars(ev: Event): bool =  # {{{1
+        # info("on_cm_bars: " & $(ev.target.nodeName))
+        var node = ev.target.parentNode
+        info("on_cm_bars: " & node.id())
         var (ul, x, y) = on_cm_setup(ev)
-        ul.append("<li>" & "bar: ..." & "</li>")
+        ul.append("<li>" & node.id() & "</li>")
         ul.append("<li id=\"cm_copybar2\">copy bar</li>")
         ul.append("<li id=\"cm_newbar2\">new bar</li>")
         jq("#cm_copybar2").off("click").on("click", on_cm_copybar)
@@ -602,20 +605,10 @@ proc on_save(ev: Event): bool =  # {{{1
 
 
 proc update_bars_from_svg(): seq[GntBar] =  # {{{1
-        const fmt = "yyyy/MM/dd HH:mm:ss"
         var data = bars_get_all_seq()
         for i in data:
             var r = SVG.select("#" & i.xmlid() & " rect").get(0)
-            debg("update rect: " & $(r.x) & "," & $(SvgRect(r).width()))
-            var x1 = cfg.rx.to(r.x)
-            var x2 = cfg.rx.to(r.x + SvgRect(r).width())
-            debg("update rect: " & $(x1) & "," & $(x2))
-            var d1 = times.getLocalTime(times.fromSeconds(x1))
-            var d2 = times.getLocalTime(times.fromSeconds(x2))
-            i.begin = x1
-            i.fin = x2
-            i.beginstr = d1.format(fmt)
-            i.endstr = d2.format(fmt)
+            i.fetch_from_rect(SvgRect(r))
             info("update rect: " & i.beginstr & "," & i.endstr)
         return data
 
