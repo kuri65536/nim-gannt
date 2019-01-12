@@ -27,6 +27,7 @@ import bars
 # forward declaration {{{1
 proc create_new_bar(t1, t2: cstring): void
 proc ev_bars(): void {.discardable.}
+proc on_csv(dat: seq[GntBar]): void
 
 
 type
@@ -470,11 +471,14 @@ proc on_csv_yaxis(min: float, max: float, sc: D3Scale): void =  # {{{1
 proc on_drag_limit_y(el: Element, x, y: int, m: JsObject): JsObject =  # {{{1
         # m: transformation matrix
         var ret = newJsObject()
+        if drag_mode > 2:
+            ret.y = true
+            return ret
         ret.x = true
         return ret
 
 
-proc on_drag_before(ev: SvgEvent): bool =  # {{{1
+proc on_drag_before_x(ev: SvgEvent): bool =  # {{{1
         var svg = SVG.select("svg").get(0).doc()
         var m = svg.screenCTM()
         var rc = ev.originalTarget.getBBox()
@@ -493,6 +497,20 @@ proc on_drag_before(ev: SvgEvent): bool =  # {{{1
         else:
             debg("center:" & $(ev.detail.event.pageX) & msg)
             drag_mode = 0
+
+
+proc on_drag_before_y(ev: SvgEvent): bool =  # {{{1
+        var rc = ev.originalTarget.getBBox()
+        drag_x = rc.x
+        drag_y = rc.y
+        drag_mode = 3
+
+
+proc on_drag_before(ev: SvgEvent): bool =  # {{{1
+        if ev.detail.event.shiftKey:
+            on_drag_before_y(ev)
+        else:
+            on_drag_before_x(ev)
 
 
 proc on_drag_finish(ev: SvgEvent): bool =  # {{{1
@@ -528,6 +546,14 @@ proc on_drag_finish(ev: SvgEvent): bool =  # {{{1
                     rc.x(drag_x)
                     rc.width(w)
                     debg("rigt<:" & $(rc.width()))
+        of 3:  # move upper or lower
+            var idx = int(cfg.ry.to(rc.y()))
+            info("on_drag_finish_y: now moving to " & $(idx))
+            var bar = initBar_from_rect(rc)
+            info("on_drag_finish_y: bar-" & $(bar.idx) & ": " & bar.text)
+            bar.move_to_idx(idx)
+            var data = bars_get_all_seq()
+            on_csv(data)
         else:  # move
             # nothing
             debg("abc")
@@ -609,7 +635,7 @@ proc update_bars_from_svg(): seq[GntBar] =  # {{{1
         for i in data:
             var r = SVG.select("#" & i.xmlid() & " rect").get(0)
             i.fetch_from_rect(SvgRect(r))
-            info("update rect: " & i.beginstr & "," & i.endstr)
+            debg("update rect: " & i.beginstr & "," & i.endstr)
         return data
 
 
@@ -670,6 +696,7 @@ proc on_csv(dat: seq[GntBar]): void =  # {{{1
         var dom = [0.0, (cfg.Y2 - cfg.Y1) / cfg.H1]  # (float)len(dat)]
         var rng = [cfg.Y1, cfg.Y2]
         var sy = initScaleLinear().domain(dom).range(rng)
+        cfg.ry = initScaleLinear().domain(rng).range(dom)
         cfg.sy = sy
 
         # create y-axis ruler

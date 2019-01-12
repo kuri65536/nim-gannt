@@ -6,6 +6,7 @@
 #
 import times
 import strutils
+import system
 
 import jsffi
 
@@ -42,11 +43,6 @@ var mi_stones: seq[GntStone] = @[]
 proc atof*(src: cstring): float {.importc: "parseFloat" .}  # {{{1
 
 
-method index(self: GntBar): int {.base.} =  # {{{1
-    # TODO: why method?
-    return self.idx
-
-
 proc mi_regist*(mi: GntBar): void =  # {{{1
         gnt_bars.add(mi)
         mi.idx = len(gnt_bars)  # idx=0 for milestones.
@@ -61,6 +57,29 @@ proc mi_get*(n: int): GntBar =  # {{{1
         return gnt_bars[n]
 
 
+proc class_to_group*(cname: cstring): int =  # {{{1
+        var name = ""
+        for i in split($(cname)):
+            if not i.startsWith("bar-"):
+                continue
+            # name = substr(i, 4, len(i) - 1)  # same as bellow.
+            name = i[4 .. ^1]
+        return int(atof(name))
+
+
+proc xmlid_to_idx*(src: cstring): int =  # {{{1
+        var xmlid = $(src)
+        return int(atof(xmlid.split("-")[1]))
+
+proc rect_to_idx*(rc: SvgRect): int =  # {{{1
+        var g = rc.parent()
+        var id = g.id()
+        # remove "gntbar-" from "gntbar-100"
+        var ret = xmlid_to_idx(id)
+        info("rect_to_idx: " & rc.id() & "->" & $(ret) & "(" & id)
+        return ret
+
+
 proc xmlid*(item: GntBar): cstring =  # {{{1
         return (cstring)("gntbar-" & $(item.idx))
 
@@ -71,6 +90,23 @@ proc bars_get_all_seq*(): seq[GntBar] =  # {{{1
 
 proc mi_items_clear*(): void =  # {{{1
         gnt_bars = @[]
+
+
+proc move_to_idx*(self: GntBar, n: int): void =  # {{{1
+        # var bars = gnt_bars  # this make copy of seq -> no effect.
+        var i = n - 1                     # idx=0 for milestones
+        var j = self.idx - 1
+        gnt_bars.delete(j)                # idx=0 for milestones
+        info("move " & $(j) & " element to " & $(i))
+        if i < 1:                         # idx=0 for milestones
+            i = 0
+            gnt_bars.insert(self, 0)
+        elif i < len(gnt_bars):
+            gnt_bars.insert(self, i)      # idx=0 for milestones
+        else:
+            i = len(gnt_bars) - 1
+            gnt_bars.add(self)
+        self.idx = i + 1
 
 
 proc mi_begin*(item: GntBar): float =  # {{{1
@@ -156,13 +192,8 @@ proc newBar*(row: string): GntBar =  # {{{1
 proc copyBar*(id: cstring): GntBar =  # {{{1
         var obj = new(GntBar)
 
-        var cname = $(jq("#" & id & " rect").attr("class"))
-        var name: cstring = ""
-        for i in split(cname):
-            if not i.startsWith("bar-"):
-                continue
-            # name = substr(i, 4, len(i) - 1)  # same as bellow.
-            name = i[4 .. ^1]
+        var cname = jq("#" & id & " rect").attr("class")
+        var name = cstring($(class_to_group(cname)))
 
         obj.file = "gui"
         obj.group = name
@@ -172,6 +203,16 @@ proc copyBar*(id: cstring): GntBar =  # {{{1
         var rc = SVG.select("#" & id & " rect").get(0)
         obj.fetch_from_rect(SvgRect(rc))
         return obj
+
+
+proc initBar_from_rect*(rc: SvgRect): GntBar =  # {{{1
+        let bars = gnt_bars
+        var n = rect_to_idx(rc) - 1
+        if n < 0:
+            n = 0
+        elif n >= len(bars):
+            n = len(bars) - 1
+        return bars[n]
 
 
 proc idx_to_xmlid(n: int): cstring =  # {{{1

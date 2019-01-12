@@ -35,7 +35,7 @@ type
     W1*: int          # milestone and text padding between milestone and text
     S1*: int          # font-size for x-tics
     sx*: D3Scale
-    rx*: D3Scale  # TODO: unified to sx.
+    rx*, ry*: D3Scale  # TODO: unified to sx.
     sy*: D3Scale
     mode_xrange*: int
     mode_title*: int
@@ -50,7 +50,7 @@ var cfg* = Config(X1: 200.0, Y1: 50.0, X2: 1000.0, Y2: 500.0,
                   H1: 20.0, H2: 2, H3: 3, H4: 10,
                   H5: 14, H6: 20,
                   W1: 10, S1: 10,
-                  mode_xrange: 0, mode_title: 1, mode_q1jan: false,
+                  mode_xrange: 0, mode_title: 0, mode_q1jan: false,
                   fmt_dtstring: "yyyy/MM/dd hh:mm:ss",
                   mode_from_dtstring: true,
                   log_level: LOGLEVEL.INFO)
