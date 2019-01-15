@@ -53,7 +53,7 @@ proc mi_len*(): int =  # {{{1
         return len(gnt_bars)
 
 
-proc mi_get*(n: int): GntBar =  # {{{1
+proc bars_get*(n: int): GntBar =  # {{{1
         return gnt_bars[n]
 
 

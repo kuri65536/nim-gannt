@@ -27,9 +27,10 @@ proc on*(jq: jQuerySelector, ev_name: cstring,
 
 proc html*(jq: jQuerySelector): cstring
 proc text*(jq: jQuerySelector): cstring
+proc text*(jq: jQuerySelector, val: cstring): jQuerySelector {.discardable.}
 proc attr*(jq: jQuerySelector, name: cstring): cstring
 proc val*(jq: jQuerySelector): cstring
-proc val*(jq: jQuerySelector, newval: cstring): jQuerySelector
+proc val*(jq: jQuerySelector, newval: cstring): jQuerySelector {.discardable.}
 proc attr*(jq: jQuerySelector, name: cstring, src: cstring): jQuerySelector
 proc append*(jq: jQuerySelector, src: jQuerySelector): jQuerySelector
 proc append*(jq: jQuerySelector, src: cstring): jQuerySelector {.discardable.}

@@ -26,7 +26,8 @@ import bars
 
 # forward declaration {{{1
 proc create_new_bar(t1, t2: cstring): void
-proc ev_bars(): void {.discardable.}
+proc on_bars_select(ev: Event): bool
+proc regist_bars_event(): void {.discardable.}
 proc on_csv(dat: seq[GntBar]): void
 
 
@@ -49,7 +50,7 @@ proc mi_select(src: cstring): cstring =  # {{{1
             var n = int(atof(src))
             if n >= mi_len():
                 return ""
-            var mi = mi_get(n)
+            var mi = bars_get(n)
             xmlid = mi.xmlid()
         else:
             # test with jQuery, so SVG selector raise exception
@@ -573,7 +574,7 @@ proc on_cm_setup(ev: Event): (jQuerySelector, int, int) =  # {{{1
 proc on_cm_newbar(ev: Event): bool =  # {{{1
         create_new_bar("new item", "")
         jq("#contextmenu").css("display", "none")
-        ev_bars()
+        regist_bars_event()
         return true
 
 
@@ -583,7 +584,31 @@ proc on_cm_copybar(ev: Event): bool =  # {{{1
         var bar = copyBar(id)
         regist_as_bar(bar)
         jq("#contextmenu").css("display", "none")
-        ev_bars()
+        regist_bars_event()
+        return true
+
+
+proc on_edit_bar(ev: Event): bool =  # {{{1
+        # update GUI parts
+        var id = jq("#edit-bar-id").val()
+        var t = jq("#edit-bar-title").val()
+        jq("#" & id & " text tspan").text(t)
+
+        # update memory
+        var idx = xmlid_to_idx(id)
+        var bar = bars_get(idx - 1)
+        bar.text = t
+        return true
+
+
+proc on_bars_select(ev: Event): bool =  # {{{1
+        var node = ev.target.parentNode
+        info("on_bars_select: " & node.id())
+        jq(".edit").css("display", "none")
+        jq(".edit-bar").css("display", "block")
+        var t = jq("#" & node.id() & " text").text()
+        jq("#edit-bar-title").val(t)
+        jq("#edit-bar-id").attr("readonly", t).val(node.id())
         return true
 
 
@@ -597,6 +622,9 @@ proc on_cm_bars(ev: Event): bool =  # {{{1
         ul.append("<li id=\"cm_newbar2\">new bar</li>")
         jq("#cm_copybar2").off("click").on("click", on_cm_copybar)
         jq("#cm_newbar2").off("click").on("click", on_cm_newbar)
+
+        # selection
+        discard on_bars_select(ev)
         return false
 
 
@@ -707,15 +735,16 @@ proc on_csv(dat: seq[GntBar]): void =  # {{{1
                 continue
             i.regist_as_bar()
 
-        ev_bars()
+        regist_bars_event()
 
 
-proc ev_bars(): void =  # {{{1
+proc regist_bars_event(): void =  # {{{1
         SVG.select("rect.bars"
           ).off("beforedrag.mm").event("beforedrag.mm", on_drag_before
           ).off("dragend.mm").event("dragend.mm", on_drag_finish
           ).draggable(on_drag_limit_y)
         jq("rect.bars").off("contextmenu.mm").on("contextmenu.mm", on_cm_bars)
+        jq("rect.bars").off("click").on("click", on_bars_select)
 
         # all rects to draggable
         # var rects = SVG.select("rect").draggable()
@@ -918,6 +947,7 @@ proc on_init(ev: Event): void =  # {{{1
         jq("#refresh").off("click").on("click", on_refresh)
         jq("#contextmenu").off("mouseleave").on("mouseleave", on_cm_leave)
         # jq("#contextmenu").off("onblur").on("onblur", on_cm_leave)
+        jq("#edit-bar-update").off("click").on("click", on_edit_bar)
 
         # load csv...
         var fname = url.searchParams.get("file")

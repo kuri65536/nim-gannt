@@ -31,6 +31,15 @@
     #contextmenu li {
         list-style: none;
     }
+    .edit-bar {
+        display: none;
+    }
+    .edit-text {
+        display: none;
+    }
+    .edit-arrow {
+        display: none;
+    }
   --></style>
   <!-- styles for SVG -->
   <style>
@@ -51,9 +60,9 @@
     .bar-4 { fill: #FFA; stroke: #FF0; }
     .bar-5 { fill: #FAF; stroke: #F0F; }
     .bar-6 { fill: #AFF; stroke: #0FF; }
-    .bar-7 { fill: #DAA; stroke: #D00; }
-    .bar-8 { fill: #ADA; stroke: #0D0; }
-    .bar-9 { fill: #AAD; stroke: #00D; }
+    .bar-7 { fill: #A66; stroke: #700; }
+    .bar-8 { fill: #6A6; stroke: #070; }
+    .bar-9 { fill: #66A; stroke: #007; }
   </style>
 </head>
 <body>
@@ -96,14 +105,22 @@
     <input id="upload_file" type="file" /> <br />
     <button id="upload">upload</button>
     <hr />
-    <select id="new_object">
-      <option value="0" selected="selected">new object</option>
-      <option value="text">new text</option>
-      <option value="arrow">new arrow</option>
-    </select>
-    <br />
-    <input id="new_text1" /> <br />
-    <input id="new_text2" />
+    <div class="edit edit-none">
+      No selection
+    </div>
+    <div class="edit edit-bar">
+      Edit bar <br />
+      <input id="edit-bar-id" /> <br />
+      <input id="edit-bar-title" /> <br />
+      <button id="edit-bar-update">update</button> <br />
+    </div>
+    <div class="edit edit-text">
+      <input id="edit-text-content" /> <br />
+    </div>
+    <div class="edit edit-arrow">
+      <input id="edit-arrow-bar1" /> <br />
+      <input id="edit-arrow-bar2" /> <br />
+    </div>
   </div>
   <div id="contextmenu">
     <ul>
