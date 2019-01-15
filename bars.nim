@@ -221,6 +221,7 @@ proc idx_to_xmlid(n: int): cstring =  # {{{1
 
 proc create_title(g: SvgParent, r: SvgElement, t: cstring): void =  # {{{1
             var t = g.text(t)
+            t.cls("bar-title")
             case cfg.mode_title
             of 1:
                 t.x(r.x).y(r.y)

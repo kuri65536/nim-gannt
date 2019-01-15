@@ -571,9 +571,7 @@ proc on_cm_setup(ev: Event): (jQuerySelector, int, int) =  # {{{1
 
 
 proc on_cm_newbar(ev: Event): bool =  # {{{1
-        var t1 = jq("#new_text1").val()
-        var t2 = jq("#new_text2").val()
-        create_new_bar(t1, t2)
+        create_new_bar("new item", "")
         jq("#contextmenu").css("display", "none")
         ev_bars()
         return true
@@ -773,7 +771,7 @@ proc create_new_arrow_core(r1, r2: SvgRect): void =  # {{{1
 
 proc create_new_bar(t1, t2: cstring): void =  # {{{1
         if len(t1) < 1:
-            debg("new_bar: title text is not specified.")
+            info("new_bar: title text is not specified.")
             return
 
         var x1 = int(cfg.rx.to((cfg.X2 + cfg.X1) / 3))
