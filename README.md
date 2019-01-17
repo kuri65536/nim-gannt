@@ -42,7 +42,7 @@ $ make launch
 
 Demonstaration
 ---------------------
-[demo](http://htmlpreview.github.io/?https://github.com/kuri65536/nim-gannt/blob/master/live.html)
+[demo](http://kuri65536.github.com/nim-gannt/live.html)
 
 
 Limitation

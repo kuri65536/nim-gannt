@@ -47,7 +47,7 @@ download: .download
 ver:=$(shell git tag | grep v.* | sort | tail -n1)
 hash:=$(shell git log -n1 --pretty=%h)
 
-demo: jq:=$(subst /,\/,http://code.jquery.com/$(jquery))
+demo: jq:=$(subst /,\/,https://code.jquery.com/$(jquery))
 demo: svg:=$(subst /,\/,https://cdnjs.cloudflare.com/ajax/libs/svg.js/2.7.1/$(svgjs))
 demo: svgd:=$(subst /,\/,https://github.com/svgdotjs/svg.draggable.js/$(svgdjs))
 demo: nimcache/gannt.js
