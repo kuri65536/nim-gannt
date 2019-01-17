@@ -42,7 +42,7 @@ $ make launch
 
 Demonstaration
 ---------------------
-[demo](http://kuri65536.github.com/nim-gannt/live.html)
+[demo](http://kuri65536.github.com/nim-gannt/live.html?file=sample.csv)
 
 
 Limitation
