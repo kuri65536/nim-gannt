@@ -47,6 +47,18 @@ download: .download
 ver:=$(shell git tag | grep v.* | sort | tail -n1)
 hash:=$(shell git log -n1 --pretty=%h)
 
+demo: jq:=$(subst /,\/,http://code.jquery.com/$(jquery))
+demo: svg:=$(subst /,\/,https://cdnjs.cloudflare.com/ajax/libs/svg.js/2.7.1/$(svgjs))
+demo: svgd:=$(subst /,\/,https://github.com/svgdotjs/svg.draggable.js/$(svgdjs))
+demo: nimcache/gannt.js
+	# echo debug: $(jq)
+	cat gannt.html \
+	| sed 's/src="jquery.js/src="$(jq)/' \
+	| sed 's/src="svg.js/src="$(svg)/' \
+	| sed 's/src="svg.draggable.js/src="$(svgd)/' \
+	| sed 's/src="nimcache\/gannt.js/src="gannt.js/' > live.html
+	@echo update gannt.js by: `ln nimcache/gannt.js .; git add gannt.js`
+
 src_deploy:=*.nim stub Makefile README.md
 deploy:
 	zip -gur nim-gannt-$(ver)-$(hash).zip $(src_deploy)

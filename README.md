@@ -40,10 +40,14 @@ $ make launch
 ```
 
 
+Demonstaration
+---------------------
+[demo](http://htmlpreview.github.io/?https://github.com/kuri65536/nim-gannt/blob/master/live.html)
+
+
 Limitation
 ---------------------
 - drag) show extending bars -> modify svg.draggable.js.
-- users cannot change the bar's orders from GUI, edit source csv by hand.
 
 
 TODO
