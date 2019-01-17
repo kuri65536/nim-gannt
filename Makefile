@@ -49,7 +49,7 @@ hash:=$(shell git log -n1 --pretty=%h)
 
 demo: jq:=$(subst /,\/,https://code.jquery.com/$(jquery))
 demo: svg:=$(subst /,\/,https://cdnjs.cloudflare.com/ajax/libs/svg.js/2.7.1/$(svgjs))
-demo: svgd:=$(subst /,\/,https://github.com/svgdotjs/svg.draggable.js/$(svgdjs))
+demo: svgd:=$(subst /,\/,https://cdn.jsdelivr.net/gh/svgdotjs/svg.draggable.js@2.2.2/dist/svg.draggable.js)
 demo: nimcache/gannt.js
 	# echo debug: $(jq)
 	cat gannt.html \
