@@ -1,10 +1,15 @@
 group,file,idx,begin,end,beginstr,endstr,text
+1,sample.txt, 38,1449281853,1451500939,2019/01/16 08-37-55,2019/01/16 17-38-03,v0.7.0 upload to github
 7,sample.txt, 38,1449281853,1451500939,2018/12/17 06-41-34,2018/12/17 17-30-00,select the range of sub-ticks
 3,sample.txt, 38,1449281853,1451500939,2018/12/25 12-55-18,2018/12/25 21-55-21,fix arrow
 3,sample.txt, 38,1449281853,1451500939,2018/12/28 12-49-44,2018/12/28 21-49-49,fix) convert event's pageX-pageY -> SVG x-y by proper way.
-2,sample.txt, 38,1449281853,1451500939,2019/01/15 08-37-27,2019/01/15 17-30-29,fix) the title text position after drag (at the right of bars).
-2,sample.txt, 38,1449281853,1451500939,2019/01/16 08-37-55,2019/01/16 17-38-03,upload to github
-2,sample.txt, 38,1449281853,1451500939,2019/01/16 08-37-55,2019/01/16 17-38-03,upload the live demo to github
+4,sample.txt, 38,1449281853,1451500939,2019/01/15 08-37-27,2019/01/15 17-30-29,fix) the title text position after drag (at the right of bars).
+5,sample.txt, 38,1449281853,1451500939,2019/01/18 08-34-39,2019/01/18 17-30-43,split the ranging algho from GUI to module file.
+6,sample.txt, 38,1449281853,1451500939,2019/01/18 08-34-39,2019/01/18 17-30-43,configure the settings and ease to launch from javascript
+7,sample.txt, 38,1449281853,1451500939,2019/01/18 08-34-39,2019/01/18 17-30-43,move live demo files to `doc` directory.
+2,sample.txt, 38,1449281853,1451500939,2019/01/18 08-34-39,2019/01/18 17-30-43,change CSV format to enhance bar properties.
+2,sample.txt, 38,1449281853,1451500939,2019/01/18 08-34-39,2019/01/18 17-30-43,word wrap in title text field.
 8,sample.txt, 38,1449281853,1451500939,2018/12/25 12-55-18,2018/12/25 21-55-21,v2:detailed arrow properties
 8,sample.txt, 38,1449281853,1451500939,2018/12/21 09-00-28,2018/12/21 17-30-00,v2:drag) show extending bars
 3,sample.txt, 38,1449281853,1451500939,2018/12/27 12-45-48,2018/12/27 21-55-51,v2:fix) can't drag bars under the title text
+1,sample.txt, 38,1449281853,1451500939,2019/02/01 08-37-55,2019/02/01 17-38-03,??? ver.1

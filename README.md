@@ -4,6 +4,7 @@ Simple Gannt chart tool by nim
 Prerequirement
 ---------------------
 - browser: tested with Firefox 64.0
+- optional: compile with nim 0.17.2 (in Ubuntu 18.04.1 LTS)
 - optional: python3 for serving the files.
 
 
@@ -44,6 +45,8 @@ Demonstaration
 ---------------------
 [demo](http://kuri65536.github.com/nim-gannt/live.html?file=sample.csv)
 
+![demo image](https://user-images.githubusercontent.com/11357613/51353406-e7cf2c00-1af3-11e9-9b85-82aabc9e4f0a.png)
+
 
 Limitation
 ---------------------
@@ -53,9 +56,15 @@ Limitation
 TODO
 ---------------------
 ### ver.1.0.0
-- copy bar
 - change default to title-field
-- change order of bars
+
+
+Donations
+---------------------
+If you are feel to nice for this software, please donation to my
+
+-   Bitcoin **| 1FTBAUaVdeGG9EPsGMD5j2SW8QHNc5HzjT |**
+-   or Ether **| 0xd7Dc5cd13BD7636664D6bf0Ee8424CFaF6b2FA8f |** .
 
 
 License
