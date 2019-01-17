@@ -1,0 +1,133 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>MindMap</title>
+  <script src="http://code.jquery.com/jquery-2.1.4.js"> </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/svg.js/2.7.1/svg.js"> </script>
+  <script src="https://github.com/svgdotjs/svg.draggable.js/raw/1848b5cac801e0e75eb1b9846542ce29c333d8e4/dist/svg.draggable.js"> </script>
+  <script src="gannt.js"> </script>
+  <style><!--
+    svg {
+      float: left
+    }
+    #controls {
+      float: left
+    }
+    #controls select {
+      display: block;
+    }
+    #contextmenu {
+        display: none;
+        position: absolute;
+        background: #DDD;
+        border: solid #AAA 2px;
+    }
+    #contextmenu ul {
+        margin: 5px;
+        padding: 5px;
+        list-style: none;
+    }
+    #contextmenu li {
+        list-style: none;
+    }
+    .edit-bar {
+        display: none;
+    }
+    .edit-text {
+        display: none;
+    }
+    .edit-arrow {
+        display: none;
+    }
+  --></style>
+  <!-- styles for SVG -->
+  <style>
+    .xtick-sub2 {
+        stroke: #DDD;
+        stroke-width: 2;
+        stroke-opacity: 1.0;
+     }
+    .bars {
+        stroke-width: 2;
+        stroke-opacity: 1.0;
+    }
+    .bar-title {
+    }
+    .bar-1 { fill: #FAA; stroke: #F00; }
+    .bar-2 { fill: #AFA; stroke: #0F0; }
+    .bar-3 { fill: #AAF; stroke: #00F; }
+    .bar-4 { fill: #FFA; stroke: #FF0; }
+    .bar-5 { fill: #FAF; stroke: #F0F; }
+    .bar-6 { fill: #AFF; stroke: #0FF; }
+    .bar-7 { fill: #A66; stroke: #700; }
+    .bar-8 { fill: #6A6; stroke: #070; }
+    .bar-9 { fill: #66A; stroke: #007; }
+  </style>
+</head>
+<body>
+  <svg id="root" width="1000" height="500">
+  </svg>
+  <div id="controls">
+    <select id="xrange">
+      <option value="0">auto</option>
+      <option value="100">auto,week</option>
+      <option value="200">auto,month</option>
+      <option value="300">auto,quater</option>
+
+      <option value="101">a month,week</option>
+      <option value="102">couple month,week</option>
+
+      <option value="104">quater,week</option>
+      <option value="204">quater,month</option>
+
+      <option value="106">half year,week</option>
+      <option value="206">half year,month</option>
+      <option value="306">half year,quater</option>
+
+      <option value="112">one year,week</option>
+      <option value="212">one year,month</option>
+      <option value="312">one year,quater</option>
+
+      <option value="324">two year,quater</option>
+      <option value="336">three year,quater</option>
+      <option value="348">four year,quater</option>
+    </select>
+    <select id="title">
+      <option value="0">title field</option>
+      <option value="1">on the bars</option>
+      <option value="2">at the right of bars</option>
+    </select>
+    <button id="refresh">refresh</button> <br />
+    <button id="save">save</button>
+    <button id="save_csv">as csv</button>
+    <hr />
+    <input id="upload_file" type="file" /> <br />
+    <button id="upload">upload</button>
+    <hr />
+    <div class="edit edit-none">
+      No selection
+    </div>
+    <div class="edit edit-bar">
+      Edit bar <br />
+      <input id="edit-bar-id" /> <br />
+      <input id="edit-bar-title" /> <br />
+      <button id="edit-bar-update">update</button> <br />
+    </div>
+    <div class="edit edit-text">
+      <input id="edit-text-content" /> <br />
+    </div>
+    <div class="edit edit-arrow">
+      <input id="edit-arrow-bar1" /> <br />
+      <input id="edit-arrow-bar2" /> <br />
+    </div>
+  </div>
+  <div id="contextmenu">
+    <ul>
+      <li id="cm-about" style="list-style: none;"> about... </li>
+    </ul>
+  </div>
+</body>
+</html>
+<!-- vi: ft=html:sw=2
+  -->
