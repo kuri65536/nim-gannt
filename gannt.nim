@@ -64,8 +64,8 @@ proc mi_select(src: cstring): cstring =  # {{{1
 
 proc xaxis_month_1st(x1: float, x2: float): cstring =  # {{{1
     if true:
-        var d1 = times.getLocalTime(times.fromSeconds((int64)x1))
-        var d2 = times.getLocalTime(times.fromSeconds((int64)x2))
+        var d1 = times.local(times.fromUnix((int64)x1))
+        var d2 = times.local(times.fromUnix((int64)x2))
         debg("new:" & d2.format("yyyy-MM-dd"))
         if d1.month == d2.month:
             return (cstring)""
@@ -82,7 +82,7 @@ proc xaxis_month_1st(x1: float, x2: float): cstring =  # {{{1
 
 
 proc day_search(x: int, dir: float): tuple[x: float, name: cstring] =  # {{{1
-        var d = times.getLocalTime(times.fromSeconds((int64)x))
+        var d = times.local(times.fromUnix((int64)x))
         d.second = 0
         d.minute = 0
         d.hour = 0
@@ -94,7 +94,7 @@ proc day_search(x: int, dir: float): tuple[x: float, name: cstring] =  # {{{1
             n = d.format("mm")
         else:
             n = d.format("d")
-        return (x: d.toTime().toSeconds(), name: n)
+        return (x: toSecSubs(d.toTime()), name: n)
 
 
 proc xaxis_day_subtick(w: float): tuple[x: float, n: int] =  # {{{1
@@ -150,7 +150,7 @@ iterator xaxis_day(min: float, max: float): tuple_xaxis =  # {{{1
 
 
 proc week_search(x: int, dir: float): tuple[x: float, name: cstring] =  # {{{1
-        var d = times.getLocalTime(times.fromSeconds((int64)x))
+        var d = times.local(times.fromUnix((int64)x))
         d.second = 0
         d.minute = 0
         d.hour = 0
@@ -167,8 +167,8 @@ proc week_search(x: int, dir: float): tuple[x: float, name: cstring] =  # {{{1
             n = "w0" & $(w)
         else:
             n = "w" & $(w)
-        n = cstring(d.format("yyyy") & n)
-        return (x: d.toTime().toSeconds(), name: n)
+        n = cstring(d.format("yyyy")) & n
+        return (x: d.toTime().toSecSubs(), name: n)
 
 
 proc xaxis_week_subtick(w: float): tuple[x: float, n: int] =  # {{{1
@@ -226,7 +226,7 @@ iterator xaxis_week(min: float, max: float): tuple_xaxis =  # {{{1
 
 
 proc month_search(x: int, dir: float): tuple[x: float, name: cstring] =  # {{{1
-        var d = times.getLocalTime(times.fromSeconds((int64)x))
+        var d = times.local(times.fromUnix((int64)x))
         d.second = 0
         d.minute = 0
         d.hour = 0
@@ -239,7 +239,7 @@ proc month_search(x: int, dir: float): tuple[x: float, name: cstring] =  # {{{1
             d.monthday = 1
             # d = d - times.initInterval(0, 0, 0, 0, 1, 0, 0)
         var n = cstring(d.format("yyyy/MM"))
-        return (x: d.toTime().toSeconds(), name: n)
+        return (x: d.toTime().toSecSubs(), name: n)
 
 
 proc xaxis_month_subtick(w: float): tuple[x: float, n: int] =  # {{{1
@@ -293,7 +293,7 @@ iterator xaxis_month(min: float, max: float): tuple_xaxis =  # {{{1
 
 
 proc quater_search(x: int, dir: float): tuple[x: float, name: cstring] =  # {{{1
-        var d = times.getLocalTime(times.fromSeconds((int64)x))
+        var d = times.local(times.fromUnix((int64)x))
         d.second = 0
         d.minute = 0
         d.hour = 0
@@ -315,7 +315,7 @@ proc quater_search(x: int, dir: float): tuple[x: float, name: cstring] =  # {{{1
             n = cstring($(d.year - 1) & "Q4")
         else:
             n = cstring(d.format("yyyy") & "Q" & $(i))
-        return (x: d.toTime().toSeconds(), name: n)
+        return (x: d.toTime().toSecSubs(), name: n)
 
 
 proc xaxis_quater_subtick(w: float): tuple[x: float, n: int] =  # {{{1
@@ -807,8 +807,8 @@ proc create_new_bar(t1, t2: cstring): void =  # {{{1
 
         var x1 = int(cfg.rx.to((cfg.X2 + cfg.X1) / 3))
         var x2 = int(cfg.rx.to((cfg.X2 + cfg.X1) / 2))
-        var d1 = times.getLocalTime(times.fromSeconds(x1))
-        var d2 = times.getLocalTime(times.fromSeconds(x2))
+        var d1 = times.local(times.fromUnix(x1))
+        var d2 = times.local(times.fromUnix(x2))
 
         var bar = initBar()
         bar.begin = float(x1)

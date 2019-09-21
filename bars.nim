@@ -113,7 +113,7 @@ proc mi_begin*(item: GntBar): float =  # {{{1
     if cfg.mode_from_dtstring:
         var dt = times.parse($(item.beginstr), $(cfg.fmt_dtstring))
         debg("mi_begin:dt:" & dt.format("yyyy-MM-dd"))
-        return dt.toTime().toSeconds()
+        return dt.toTime().toSecSubs()
     return item.begin
 
 
@@ -121,7 +121,7 @@ proc mi_end*(item: GntBar): float =  # {{{1
     if cfg.mode_from_dtstring:
         var dt = times.parse($(item.endstr), $(cfg.fmt_dtstring))
         debg("mi_end:dt:" & dt.format("yyyy-MM-dd"))
-        return dt.toTime().toSeconds()
+        return dt.toTime().toSecSubs()
     return item.fin
 
 
@@ -143,8 +143,8 @@ proc fetch_from_rect*(self: GntBar,  # {{{1
     var x1 = cfg.rx.to(r.x)
     var x2 = cfg.rx.to(r.x + r.width())
     debg("update rect: " & $(x1) & "," & $(x2))
-    var d1 = times.getLocalTime(times.fromSeconds(x1))
-    var d2 = times.getLocalTime(times.fromSeconds(x2))
+    var d1 = times.local(times.fromUnix(int(x1)))
+    var d2 = times.local(times.fromUnix(int(x2)))
     self.begin = x1
     self.fin = x2
     self.beginstr = d1.format(fmt)

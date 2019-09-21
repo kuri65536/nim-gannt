@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
 import jsffi
+import times
 
 import logging
 
@@ -56,6 +57,10 @@ proc to*(self: D3Scale, x: float): float =  # {{{1
 
 proc to*(self: D3Scale, x: int): float =  # {{{1
     return self.to(float(x))
+
+
+proc toSecSubs*(t: times.Time): float =
+    float(t.toUnix()) + float(t.nanosecond()) / 1e-9
 
 
 iterator ajax_text_split_cols*(row: string): cstring =  # {{{1
