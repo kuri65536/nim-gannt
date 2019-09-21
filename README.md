@@ -3,8 +3,8 @@ Simple Gannt chart tool by nim
 
 Prerequirement
 ---------------------
-- browser: tested with Firefox 64.0
-- optional: compile with nim 0.17.2 (in Ubuntu 18.04.1 LTS)
+- browser: tested with Firefox 68.0.1
+- optional: compile with nim 0.19.4
 - optional: python3 for serving the files.
 
 
@@ -55,8 +55,7 @@ Limitation
 
 TODO
 ---------------------
-### ver.1.0.0
-- change default to title-field
+see [sample.csv](http://kuri65536.github.com/nim-gannt/live.html?file=sample.csv)
 
 
 Donations
