@@ -138,7 +138,7 @@ proc format*(self: GntBar): cstring =  # {{{1
 
 proc fetch_from_rect*(self: GntBar,  # {{{1
                       r: SvgRect): GntBar {.discardable.} =
-    const fmt = "yyyy/MM/dd HH:mm:ss"
+    var fmt = $(cfg.fmt_dtstring)
     debg("update rect: " & $(r.x) & "," & $(r.width()))
     var x1 = cfg.rx.to(r.x)
     var x2 = cfg.rx.to(r.x + r.width())
