@@ -48,7 +48,9 @@ proc screenCTM*(svg: SvgParent): SvgMatrix
 proc element*(svg: SvgParent, typ: cstring): SvgElement
 proc group*(svg: SvgParent): SvgParent
 proc rect*(svg: SvgParent, w: int, h: int): SvgRect
+proc rect*(svg: SvgParent, w, h: float): SvgRect
 proc line*(svg: SvgParent, x: int, y: int, w: int, h: int): SvgLine
+proc line*(svg: SvgParent, x1, y1, x2, y2: float): SvgLine {.discardable.}
 proc text*(svg: SvgParent, t: cstring): SvgText
 proc path*(svg: SvgParent, t: cstring): SvgPath {.discardable.}
 proc marker*(svg: SvgParent, vx: int, vy: int,
@@ -59,12 +61,14 @@ proc marker*(svg: SvgElement,
 proc parent*(svg: SvgElement): SvgElement {.discardable.}
 proc id*(svg: SvgElement, src: cstring): SvgElement {.discardable.}
 proc id*(svg: SvgElement): cstring
-proc attr*(svg: SvgElement, name, value: cstring): SvgElement
-proc style*(svg: SvgElement, name, value: cstring): SvgElement
+proc attr*(svg: SvgElement, name, value: cstring): SvgElement {.discardable.}
+proc style*(svg: SvgElement, name, value: cstring): SvgElement {.discardable.}
 proc words*(svg: SvgElement, value: cstring): SvgElement {.discardable.}
 proc fill*(svg: SvgElement, src: cstring): SvgElement
 proc x*(svg: SvgElement, x: int): SvgElement {.discardable.}
 proc y*(svg: SvgElement, y: int): SvgElement {.discardable.}
+proc x*(svg: SvgElement, x: float): SvgElement {.discardable.}
+proc y*(svg: SvgElement, y: float): SvgElement {.discardable.}
 proc x*(svg: SvgElement): int
 proc y*(svg: SvgElement): int
 # proc getBBox*(svg: SvgElement): SvgRect2
