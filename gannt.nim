@@ -426,7 +426,7 @@ proc rect_black(rect: SvgRect, msg: cstring): void =  # {{{1
              "-" & $(rect.width()) & "," & $(rect.height()))
 
 
-proc on_csv_xaxis(min: float, max: float): void =  # {{{1
+proc on_csv_xaxis(min, max: float): void =  # {{{1
         var svg = SVG.select("svg").get(0).doc()
         var bbox = svg.rect(int(cfg.X2 - cfg.X1), (int)cfg.Y1)
         discard bbox.x(int(cfg.X1)).y(0)
@@ -440,6 +440,8 @@ proc on_csv_xaxis(min: float, max: float): void =  # {{{1
         var gt = ga.group()
         for tup in xaxis_iter(min, max):
             debg("x-iter: " & $(tup.pos))
+            if float(tup.pos) < cfg.X1:
+                continue
             px = tup.pos
             n += 1
             var ns = $(n)
