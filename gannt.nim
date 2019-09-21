@@ -87,8 +87,8 @@ proc day_search(x: int, dir: float): tuple[x: float, name: cstring] =  # {{{1
         d.minute = 0
         d.hour = 0
         if dir > 0:
-            d = d + times.initInterval(0, 0, 0, 0, 1, 0, 0)
-            d = d - times.initInterval(0, 2, 0, 0, 0, 0, 0)
+            d = d + times.initTimeInterval(0, 0, 0, 0, 0, 0, 1, 0, 0)
+            d = d - times.initTimeInterval(0, 0, 0, 2, 0, 0, 0, 0, 0)
         var n: cstring
         if d.monthday == 1:
             n = d.format("mm")
@@ -98,7 +98,7 @@ proc day_search(x: int, dir: float): tuple[x: float, name: cstring] =  # {{{1
 
 
 proc xaxis_day_subtick(w: float): tuple[x: float, n: int] =  # {{{1
-        var ti = times.initInterval(0, int(w), 0, 0, 0, 0, 0)
+        var ti = times.initTimeInterval(0, 0, 0, int(w), 0, 0, 0, 0, 0)
         # debg("w-tick: %d-%d-%d", ti.months, ti.days, ti.hours)
         if ti.months > 0:
             return (x: 30.0 * 24 * 60 * 60, n: 10)
@@ -156,10 +156,11 @@ proc week_search(x: int, dir: float): tuple[x: float, name: cstring] =  # {{{1
         d.hour = 0
         if dir > 0:
             var n = 6 - d.weekday.ord + 7 * int(dir)
-            d = d + times.initInterval(0, 0, 0, 0, n, 0, 0)
+            d = d + times.initTimeInterval(0, 0, 0, 0, 0, 0, n, 0, 0)
         else:
             # debg("w-srch: %d-%s-%s", d.weekday.ord, $(d.weekday), d.format("yyyy-MM-dd"))
-            d = d - times.initInterval(0, 0, 0, 0, d.weekday.ord, 0, 0)
+            d = d - times.initTimeInterval(
+                    0, 0, 0, 0, 0, 0, d.weekday.ord, 0, 0)
         var w = (d.yearday div 7) + 1
         var n: cstring
         if w < 10:
@@ -171,7 +172,7 @@ proc week_search(x: int, dir: float): tuple[x: float, name: cstring] =  # {{{1
 
 
 proc xaxis_week_subtick(w: float): tuple[x: float, n: int] =  # {{{1
-        var ti = times.initInterval(0, int(w), 0, 0, 0, 0, 0)
+        var ti = times.initTimeInterval(0, 0, 0, int(w), 0, 0, 0, 0, 0)
         # debg("w-tick: %d-%d-%d", ti.months, ti.days, ti.hours)
         if ti.months > 0:
             return (x: 30.0 * 24 * 60 * 60, n: 10)
@@ -231,9 +232,9 @@ proc month_search(x: int, dir: float): tuple[x: float, name: cstring] =  # {{{1
         d.hour = 0
         if dir > 0:
             d.monthday = 27
-            d = d + times.initInterval(0, 0, 0, 0, 7, int(dir), 0)
+            d = d + times.initTimeInterval(0, 0, 0, 0, 0, 0, 7, int(dir), 0)
             d.monthday = 1
-            d = d - times.initInterval(0, 0, 0, 0, 1, 0, 0)
+            d = d - times.initTimeInterval(0, 0, 0, 0, 0, 0, 1, 0, 0)
         else:
             d.monthday = 1
             # d = d - times.initInterval(0, 0, 0, 0, 1, 0, 0)
@@ -242,12 +243,12 @@ proc month_search(x: int, dir: float): tuple[x: float, name: cstring] =  # {{{1
 
 
 proc xaxis_month_subtick(w: float): tuple[x: float, n: int] =  # {{{1
-        var ti = times.initInterval(0, int(w), 0, 0, 0, 0, 0)
+        var ti = times.initTimeInterval(0, 0, 0, int(w), 0, 0, 0, 0, 0)
         debg("tick: " & $(ti.days))
         if ti.days > 13:
             return (x: 14.0 * 24 * 60 * 60, n: 2)
         if ti.days > 2:
-            ti = times.initInterval(0, 0, 0, 0, 7, 0, 0)
+            ti = times.initTimeInterval(0, 0, 0, 0, 0, 0, 7, 0, 0)
             return (x: 7.0 * 24 * 60 * 60, n: 4)
         if ti.days > 0 and ti.hours > 11:
             return (x: 2.0 * 24 * 60 * 60, n: 4)
@@ -303,8 +304,9 @@ proc quater_search(x: int, dir: float): tuple[x: float, name: cstring] =  # {{{1
         d.month = Month(1 + i * 3)
 
         if dir > 0:
-            d = d + times.initInterval(0, 0, 0, 0, 0, 3 * int(dir) + 1, 0)
-            d = d - times.initInterval(0, 0, 0, 0, 1, 0, 0)
+            d = d + times.initTimeInterval(
+                    0, 0, 0, 0, 0, 0, 0, 3 * int(dir) + 1, 0)
+            d = d - times.initTimeInterval(0, 0, 0, 0, 0, 0, 1, 0, 0)
 
         var n: cstring
         if cfg.mode_q1jan:
@@ -317,7 +319,7 @@ proc quater_search(x: int, dir: float): tuple[x: float, name: cstring] =  # {{{1
 
 
 proc xaxis_quater_subtick(w: float): tuple[x: float, n: int] =  # {{{1
-        var ti = times.initInterval(0, int(w), 0, 0, 0, 0, 0)
+        var ti = times.initTimeInterval(0, 0, 0, int(w), 0, 0, 0, 0, 0)
         # debg("q-tick: %d-%d-%d", ti.months, ti.days, ti.hours)
         if ti.months > 0:
             return (x: 30.0 * 24 * 60 * 60, n: 5)
@@ -955,5 +957,5 @@ proc on_init(ev: Event): void =  # {{{1
             discard jQuery.ajax(fname).then(ajax_text)
 
 # main {{{1
-var pm = jQuery.jqwhen(jQuery.ready).then(on_init)
+discard jQuery.jqwhen(jQuery.ready).then(on_init)
 # vi: ft=nim:et:ts=4:sw=4:tw=80:nowrap:fdm=marker
