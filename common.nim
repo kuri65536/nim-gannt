@@ -16,15 +16,12 @@ type
     r1, r2, d1, d2: float
 
 
-proc initScaleLinear*(): var D3Scale =  # {{{1
-    new(result)
-    result.d1 = 0.0
-    result.d2 = 0.0
-    result.r1 = 0.0
-    result.r2 = 0.0
+proc initScaleLinear*(): D3Scale =  # {{{1
+    D3Scale(d1: 0.0, d2: 0.0,
+            r1: 0.0, r2: 0.0)
 
 
-proc calc(self: var D3Scale): bool {.discardable.} =  # {{{1
+proc calc(self: D3Scale): bool {.discardable.} =  # {{{1
     if self.d1 == 0.0 and self.d1 == self.d2:
         return true
     elif self.r1 == 0.0 and self.r1 == self.r2:
@@ -35,16 +32,16 @@ proc calc(self: var D3Scale): bool {.discardable.} =  # {{{1
     return false
 
 
-proc domain*(self: var D3Scale, minmax: array[0..1, float]
-             ): var D3Scale {.discardable.} =  # {{{1
+proc domain*(self: D3Scale, minmax: array[0..1, float]
+             ): D3Scale {.discardable.} =  # {{{1
     self.d1 = minmax[0]
     self.d2 = minmax[1]
     self.calc()
     return self
 
 
-proc range*(self: var D3Scale, minmax: array[0..1, float]
-            ): var D3Scale {.discardable.} =  # {{{1
+proc range*(self: D3Scale, minmax: array[0..1, float]
+            ): D3Scale {.discardable.} =  # {{{1
     self.r1 = minmax[0]
     self.r2 = minmax[1]
     self.calc()
