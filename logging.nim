@@ -8,6 +8,7 @@ import jsffi
 
 type
   LOGLEVEL* = enum
+    VERBOSE = 0
     DEBUG = 10
     INFO = 20
     WARNING = 30
@@ -16,7 +17,7 @@ type
   Console = ref object of RootObj
 
 var log {.importc: "console", nodecl.}: Console
-var level_cur: LOGLEVEL = LOGLEVEL.DEBUG
+var level_cur = LOGLEVEL.DEBUG
 
 proc call_debg(console: Console) {.importcpp: "#.debug(#)", varargs.}
 proc call_info(console: Console) {.importcpp: "#.info(#)", varargs.}
@@ -28,43 +29,51 @@ proc setLevel*(n: LOGLEVEL) =  # {{{1
     level_cur = n
 
 
-proc debg*(fmt: string) =  # {{{1
+proc verb*(fmt: cstring) =  # {{{1
+    if level_cur > LOGLEVEL.VERBOSE:
+        return
+    log.call_debg(fmt)
+
+
+proc debg*(fmt: cstring) =  # {{{1
     if level_cur > LOGLEVEL.DEBUG:
         return
     log.call_debg(fmt)
 
 
-proc info*(fmt: string) =  # {{{1
+proc info*(fmt: cstring) =  # {{{1
     if level_cur > LOGLEVEL.INFO:
         return
     log.call_info(fmt)
 
 
-proc warn*(fmt: string) =  # {{{1
+proc warn*(fmt: cstring) =  # {{{1
     if level_cur > LOGLEVEL.WARNING:
         return
     log.call_warn(fmt)
 
 
-proc eror*(fmt: string) =  # {{{1
+proc eror*(fmt: cstring) =  # {{{1
     if level_cur > LOGLEVEL.ERROR:
         return
     log.call_eror(fmt)
 
 
-proc debg*(fmt: cstring) =  # {{{1
-    debg($(fmt))
+#[
+proc debg*(fmt: string) =  # {{{1
+    debg(cstring(fmt))
 
 
-proc info*(fmt: cstring) =  # {{{1
-    info($(fmt))
+proc info*(fmt: string) =  # {{{1
+    info(cstring(fmt))
 
 
-proc warn*(fmt: cstring) =  # {{{1
-    warn($(fmt))
+proc warn*(fmt: string) =  # {{{1
+    warn(cstring(fmt))
 
 
-proc eror*(fmt: cstring) =  # {{{1
-    eror($(fmt))
+proc eror*(fmt: string) =  # {{{1
+    eror(cstring(fmt))
+]#
 
 # vi: ft=nim:et:ts=4:sw=4:tw=80:nowrap:fdm=marker
